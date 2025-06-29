@@ -5,7 +5,7 @@ _G.A90Config = {
     StaticColor = Color3.fromRGB(137, 3, 255),
     HitSound = "rbxassetid://15721632844",
     SpawnSound = "rbxassetid://5528579362",
-    Damage = 33
+    Damage = 66
 }
 
 -- Made by @Focuslol666
