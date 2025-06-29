@@ -1,0 +1,60 @@
+_G.A90Config = {
+    Face = "rbxassetid://115155763975049",
+    AngryFace = "rbxassetid://129604745499437",
+    StopIcon = "rbxassetid://115155763975049",
+    StaticColor = Color3.fromRGB(137, 3, 255),
+    HitSound = "rbxassetid://15721632844",
+    SpawnSound = "rbxassetid://5528579362",
+    Damage = 33
+}
+
+-- Made by @Focuslol666
+function RunA90()
+    local config = _G.A90Config
+
+    local gui = game:GetService("Players").LocalPlayer.PlayerGui
+    gui.MainUI.Jumpscare.Jumpscare_A90.Face.Image = config.Face
+    gui.MainUI.Jumpscare.Jumpscare_A90.FaceAngry.Image = config.AngryFace
+    gui.MainUI.Jumpscare.Jumpscare_A90.StopIcon.Image = config.StopIcon
+    gui.MainUI.Jumpscare.Jumpscare_A90.Static.ImageColor3 = config.StaticColor
+    gui.MainUI.Jumpscare.Jumpscare_A90.Static2.ImageColor3 = config.StaticColor
+    gui.MainUI.Jumpscare.Jumpscare_A90.StopIcon.StopStatic.ImageColor3 = config.StaticColor
+    gui.MainUI.Initiator.Main_Game.RemoteListener.Modules.A90.Hit.SoundId = config.HitSound
+    gui.MainUI.Initiator.Main_Game.RemoteListener.Modules.A90.Spawn.SoundId = config.SpawnSound
+
+    coroutine.wrap(function()
+        local initiator = gui.MainUI.Initiator.Main_Game
+        require(initiator.RemoteListener.Modules.A90)(
+            require(initiator),
+            workspace.CurrentRooms[game.Players.LocalPlayer:GetAttribute("CurrentRoom")]
+        )
+
+        while true do
+            if gui.MainUI.Jumpscare.Jumpscare_A90.FaceAngry.Visible then
+                task.wait(1)
+                game.Players.LocalPlayer.Character.Humanoid.Health -= config.Damage
+                break
+            end
+            task.wait()
+        end
+        if game:GetService("Players").LocalPlayer.Character.Humanoid.Health <= 0 then
+            game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Sadler"
+            firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"You died to Sadler", "Dont move when he appears"},"Blue")
+        end
+    end)()
+end
+
+RunA90()
+
+wait(1.5)
+
+---====== Load achievement giver ======---
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Achievements/Source.lua"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Sudden Observation",
+    Desc = "DONT YOU DARE TO MOVE?!",
+    Reason = "Encounter Sadler.",
+    Image = "rbxassetid://106458611318981"
+})
