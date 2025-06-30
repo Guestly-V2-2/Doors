@@ -1,0 +1,137 @@
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+local TweenService = game:GetService("TweenService")
+local hum = chr:FindFirstChild("Humanoid")
+local Move = true 
+
+local s = game:GetObjects("rbxassetid://90286594212998")[1]
+s.Parent = workspace
+s.Name = "Goofier"
+local primary_part = s:FindFirstChildWhichIsA("BasePart") or s:FindFirstChildWhichIsA("Part")
+entity = primary_part
+entity.CFrame = chr.HumanoidRootPart.CFrame * CFrame.new(0, 0, 20)
+entity.CanCollide = false
+entity.Anchored = true
+
+local function Moving(target, dur)
+    local tween_info = TweenInfo.new(dur, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(entity, tween_info, {CFrame = target})
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+game.Workspace.Goofier.Depth.Footsteps.Volume = 0.15
+wait(5)
+task.spawn(function()
+while Move == true do
+wait(0)
+Moving(chr.HumanoidRootPart.CFrame, 2)
+end
+end)
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local death = true
+
+spawn(function()
+while task.wait() do
+if death == true then
+
+local monster = entity
+local target = HumanoidRootPart
+local origin = monster.Position
+local direction = (target.Position - origin).Unit
+local ray = Ray.new(origin, direction * 3)
+local raycast = workspace:Raycast(ray.Origin, ray.Direction)
+
+if raycast and raycast.Instance.Parent == character then
+if not character:GetAttribute("Hiding") then
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = 1
+    sound.Name = "GoofierVL1"
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250630_03.mp3?raw=true", 1, "GoofierVL")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(135, 1, 1)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("HAHAHAHAHAHHAHAA! EASYYYYYYYYYYYYYYYYYYY!",true)
+
+game.Players.LocalPlayer.Character.Humanoid:TakeDamage(30)
+game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Goofier"
+Move = false
+wait(4)
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 10
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+wait(1)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(5),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+local cue2 = Instance.new("Sound")
+	cue2.Parent = game.Workspace
+	cue2.Name = "Spawn"
+	cue2.SoundId = "rbxassetid://7053083974"
+	cue2.Volume = 5
+	cue2.PlaybackSpeed = 1
+	cue2:Play()
+s:Destroy()
+wait(1.5)
+local cue = Instance.new("Sound")
+	cue.Parent = game.Workspace
+	cue.Name = "Spawn"
+	cue.SoundId = "rbxassetid://1201103772"
+	cue.Volume = 1
+	cue.PlaybackSpeed = 1.5
+	cue:Play()
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255, 107, 8)
+game.Lighting.MainColorCorrection.Contrast = 10
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(5),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(3, 255, 11)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("Toxicity: +5%",true)
+task.wait(0)
+_G.stats.Value += 5
+
+---====== Load achievement giver ======---
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Achievements/Source.lua"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "The Silent Biting",
+    Desc = "LOL EZ!",
+    Reason = "Encounter Goofier",
+    Image = "rbxassetid://114275781089210"
+})
+end
+end
+
+end
+end
+end)
+
+wait(25)
+Move = false
+Moving(entity.CFrame * CFrame.new(0, -100, 0), 3)
+wait(3)
+s:Destroy()
