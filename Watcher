@@ -1,0 +1,69 @@
+dmg = true
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Watcher"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local imageLabel = Instance.new("ImageLabel")
+imageLabel.Name = "Face1"
+imageLabel.Size = UDim2.new(1, 0, 1, 0)
+imageLabel.BackgroundTransparency = 1
+imageLabel.ImageTransparency = 1
+imageLabel.Image = "rbxassetid://92141944963792"
+imageLabel.Parent = screenGui
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Watcher.Face1, TweenInfo.new(3),{ImageTransparency = 0})
+TW:Play()
+wait(4)
+imageLabel.Image = "rbxassetid://110054178904160"
+wait(1)
+if not chr:GetAttribute("Crouching") and dmg == true then
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = 2
+    sound.PlaybackSpeed = 1
+    sound.Name = "ThatWhiteScream"
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250701_01.mp3?raw=true", 1, " WatcherScream")
+
+imageLabel.Image = "rbxassetid://119388867193941"
+game.Players.LocalPlayer.Character.Humanoid.Health -= 50
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Watcher"
+
+wait(1.5)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Watcher.Face1, TweenInfo.new(3),{ImageTransparency = 1})
+TW:Play()
+wait(3)
+game.Players.LocalPlayer.PlayerGui.Watcher:Destroy()
+end
+
+if chr:GetAttribute("Crouching") and dmg == true then
+wait(5)
+imageLabel.Image = "rbxassetid://92141944963792"
+dmg = false
+wait(1)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Watcher.Face1, TweenInfo.new(3),{ImageTransparency = 1})
+TW:Play()
+wait(3)
+game.Players.LocalPlayer.PlayerGui.Watcher:Destroy()
+end
