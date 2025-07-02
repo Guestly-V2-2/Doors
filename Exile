@@ -1,0 +1,186 @@
+local cue = Instance.new("Sound")
+	cue.Parent = game.Workspace
+	cue.Name = "Spawn"
+	cue.SoundId = "rbxassetid://8464268467"
+	cue.Volume = 5
+	cue.PlaybackSpeed = 1.5
+	cue:Play()
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+wait(0.3)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(5),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+require(game.ReplicatedStorage.ClientModules.Module_Events).tryp(workspace.CurrentRooms, 100)
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Exhausted1"
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true
+
+local red = Instance.new("ImageLabel")
+red.Name = "Exhausted"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1 -- Make the background fully transparent
+red.Image = "rbxassetid://103662323834612" -- Set the image using a random Image ID
+red.ImageTransparency = 0
+red.Parent = screenGui
+
+attack = true
+local exile = game:GetObjects("rbxassetid://139898365603393")[1]
+exile.Parent = game.Workspace
+exile.Name = "Exile"
+
+local findpart = exile:FindFirstChildWhichIsA("BasePart") or exile:FindFirstChildWhichIsA("Part")
+findpart.CFrame = game.Workspace.CurrentRooms:GetChildren()[#game.Workspace.CurrentRooms:GetChildren() - 1].Parts.Floor.CFrame + Vector3.new(0,10,0)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ModuleEvents = require(ReplicatedStorage.ClientModules.Module_Events)
+local currentrooms = game.Workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value]
+ModuleEvents.shatter(currentrooms)
+
+local ultimaroom = game.ReplicatedStorage.GameData.LatestRoom.Value
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+game.Workspace.Exile.Depth.Attachment.ParticleEmitter.Texture = "rbxassetid://135167700093735"
+game.Workspace.Exile.Depth.Attachment.Bubble.Brightness = 0
+game.Workspace.Exile.Depth.Attachment.PointLight.Brightness = 0
+game.Workspace.Exile.Depth.Attachment.PointLight.Range = 0
+game.Workspace.Exile.Depth.Attachment.Smoke.Brightness = 0
+game.Workspace.Exile.Depth.Attachment.Stars.Brightness = 0
+game.Workspace.Exile.Depth.Attachment.PointLight2.Brightness = 0
+game.Workspace.Exile.Depth.Attachment.PointLight2.Range = 0
+wait(3)
+local cue2 = Instance.new("Sound")
+	cue2.Parent = game.Workspace
+	cue2.Name = "SpawnExile"
+	cue2.SoundId = "rbxassetid://4288784832"
+	cue2.Volume = 10
+	cue2.PlaybackSpeed = 0.9
+	cue2:Play()
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+wait(0.5)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(5),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+game.Workspace.Exile.Depth.Footsteps.Playing = true
+game.Workspace.Exile.Depth.Attachment.ParticleEmitter.Texture = "rbxassetid://84158292133273"
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.Bubble, TweenInfo.new(5),{Brightness = 1})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Footsteps, TweenInfo.new(5),{Volume = 3})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight, TweenInfo.new(5),{Brightness = 50})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight, TweenInfo.new(5),{Range = 7})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.Smoke, TweenInfo.new(5),{Brightness = 1})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.Stars, TweenInfo.new(5),{Brightness = 3})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight2, TweenInfo.new(5),{Brightness = 10})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight2, TweenInfo.new(5),{Range = 15})
+TW:Play()
+
+while true do
+wait(0)
+if not chr:GetAttribute("Crouching") and attack == true then
+local cue = Instance.new("Sound")
+	cue.Parent = game.Workspace
+	cue.Name = "Atacked"
+	cue.SoundId = "rbxassetid://175024455"
+	cue.Volume = 3
+	cue.PlaybackSpeed = 0.9
+	cue:Play()
+
+game.Players.LocalPlayer.Character.Humanoid.Health -= 10
+firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"You died to who you call Exile...","He spawns in center of room and he will damage you if you dont crouch","I believe you can do it!"},"Blue")
+        	game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Exile"
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Attacked"
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true
+
+local red = Instance.new("ImageLabel")
+red.Name = "GetAttacked"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1 -- Make the background fully transparent
+red.Image = "rbxassetid://123897027983488" -- Set the image using a random Image ID
+red.ImageTransparency = 0
+red.Parent = screenGui
+wait(0.4)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Attacked.GetAttacked, TweenInfo.new(1),{ImageTransparency = 1})
+TW:Play()
+wait(1)
+game.Players.LocalPlayer.PlayerGui.Attacked:Destroy()
+end
+if ultimaroom ~= game.ReplicatedStorage.GameData.LatestRoom.Value then 
+attack = false
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Exhausted1.Exhausted, TweenInfo.new(7),{ImageTransparency = 1})
+TW:Play()
+game.Workspace.Exile.Depth.Attachment.ParticleEmitter.Texture = "rbxassetid://135167700093735"
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.Bubble, TweenInfo.new(7),{Brightness = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Footsteps, TweenInfo.new(7),{Volume = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight, TweenInfo.new(7),{Brightness = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight, TweenInfo.new(7),{Range = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.Smoke, TweenInfo.new(7),{Brightness = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.Stars, TweenInfo.new(7),{Brightness = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight2, TweenInfo.new(7),{Brightness = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.PointLight2, TweenInfo.new(7),{Range = 0})
+TW:Play()
+wait(7)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Exile.Depth.Attachment.ParticleEmitter, TweenInfo.new(3),{Brightness = 0})
+TW:Play()
+wait(4)
+exile:Destroy()
+
+---====== Load achievement giver ======---
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Achievements/Source.lua"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Silent Motioness",
+    Desc = "Crouch or die?",
+    Reason = "Encounter Exile",
+    Image = "rbxassetid://94355997130246"
+})
+break end
+end
