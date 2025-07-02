@@ -1,0 +1,195 @@
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "Screaming"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/lv_0_20250702155648.mp3?raw=true", 1, " Screaming")
+
+local cue = Instance.new("Sound")
+	cue.Parent = game.Workspace
+	cue.Name = "SpawnSuperidol"
+	cue.SoundId = "rbxassetid://165969964"
+	cue.Volume = 7
+	cue.PlaybackSpeed = 3
+	cue:Play()
+
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(5),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+
+-- Check current room
+local entityModel = true
+local latestRoom = game.ReplicatedStorage.GameData.LatestRoom.Value
+
+-- If in Seek, Figure, or Room 90+
+if game.Workspace:FindFirstChild("SeekMovingNewClone") or 
+   latestRoom == 50 or latestRoom == 100 or  
+   (latestRoom >= 90 and latestRoom <= 100) then
+    entityModel = false
+end
+
+local Kill = true
+local depthsTer = game:GetObjects("rbxassetid://100942890479616")[1] -- Load DepthsTer from the ID
+depthsTer.Parent = game.Workspace
+depthsTer.Name = "Supervisor"
+local part = depthsTer:FindFirstChildWhichIsA("BasePart") or depthsTer:FindFirstChildWhichIsA("Part")
+
+-- Set the position of DepthsTer in the room
+part.CFrame = game.Workspace.CurrentRooms:GetChildren()[#game.Workspace.CurrentRooms:GetChildren() - 1].Parts.Floor.CFrame + Vector3.new(0, 6, 0)
+workspace.Supervisor.Depth.Attachment.ParticleEmitter.Texture = "rbxassetid://94353367717398"
+workspace.Supervisor.Depth.Attachment.PointLight.Range = 30
+workspace.Supervisor.Depth.Attachment.PointLight.Brightness = 35
+workspace.Supervisor.Depth.Attachment.PointLight.Color = Color3.fromRGB(252, 3, 107)
+workspace.Supervisor.Depth.Attachment.Rays:Destroy()
+workspace.Supervisor.Depth.Attachment.Smoke:Destroy()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(workspace.Supervisor.Depth.Attachment.ParticleEmitter, TweenInfo.new(4.6),{Brightness = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Supervisor.Depth.Attachment.PointLight, TweenInfo.new(4.6),{Range = 0})
+TW:Play()
+wait(4.7)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(workspace.Supervisor.Depth.Attachment.ParticleEmitter, TweenInfo.new(3),{Brightness = 1})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Supervisor.Depth.Attachment.PointLight, TweenInfo.new(3),{Range = 15})
+TW:Play()
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255, 255, 255)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(10),{TintColor = Color3.fromRGB(252, 3, 107)})
+TW:Play()
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "Start"
+    sound.Volume = 3
+    sound.Looped = true
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/lv_0_20250702165020.mp3?raw=true", 1, " Start")
+
+local CameraShaker = require(game.ReplicatedStorage.CameraShaker)
+local camera = game.Workspace.CurrentCamera
+local camShake = CameraShaker.new(Enum.RenderPriority.Camera.Value, function(shakeCf)
+camera.CFrame = camera.CFrame * shakeCf
+end)
+camShake:Start()
+camShake:ShakeOnce(13, 10, 8, 5, 3, 1)
+
+task.spawn(function()
+    while Kill == true do
+        task.wait(0)  -- Reduce the wait time to increase damage speed
+        local _, camera = game.Workspace.CurrentCamera:WorldToViewportPoint(part.Position)
+        
+        -- If the player is not looking at DepthTer, they take damage
+        if not camera then
+
+game.Players.LocalPlayer.Character.Humanoid:TakeDamage(5)
+
+local cue = Instance.new("Sound")
+	cue.Parent = game.Workspace
+	cue.Name = "Damaging"
+	cue.SoundId = "rbxassetid://175024455"
+	cue.Volume = 1.5
+	cue.PlaybackSpeed = 1.1
+	cue:Play()
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Damaged"
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true
+
+local red = Instance.new("ImageLabel")
+red.Name = "Getdamaged"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1 -- Make the background fully transparent
+red.Image = "rbxassetid://71949861179744" -- Set the image using a random Image ID
+red.ImageTransparency = 0
+red.Parent = screenGui
+wait(0.4)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Damaged.Getdamaged, TweenInfo.new(1),{ImageTransparency = 1})
+TW:Play()
+wait(1)
+game.Players.LocalPlayer.PlayerGui.Damaged:Destroy()
+        end
+        
+        -- If the player dies, update the death cause and show the death hint
+        if game.Players.LocalPlayer.Character.Humanoid.Health <= 0 then
+            -- Show death hint
+            firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"You died to who you call Supervisor...","He spawns in front of you and he will damage you if you dont look at him","You did better keep going!"},"Blue")
+            wait(0.01)
+            -- Update the death cause in the game stats
+            game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Supervisor"
+        end
+    end
+end)
+
+-- Wait for the room to change
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+Kill = false
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(252, 3, 107)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(3),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(workspace.Supervisor.Depth.Attachment.ParticleEmitter, TweenInfo.new(3),{Brightness = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Supervisor.Depth.Attachment.PointLight, TweenInfo.new(3),{Range = 0})
+TW:Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(workspace.Start, TweenInfo.new(3),{PlaybackSpeed = 0})
+TW:Play()
+wait(5)
+-- Destroy DepthTer when no longer needed
+depthsTer:Destroy()
+game.Workspace.Start:Destroy()
+
+---====== Load achievement giver ======---
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Achievements/Source.lua"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Stare Over And Over Again",
+    Desc = "Don't look at me plis!",
+    Reason = "Encounter Supervisor",
+    Image = "rbxassetid://86079727771147"
+})
