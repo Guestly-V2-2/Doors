@@ -52,10 +52,10 @@ local part = depthsTer:FindFirstChildWhichIsA("BasePart") or depthsTer:FindFirst
 
 -- Set the position of DepthsTer in the room
 part.CFrame = game.Workspace.CurrentRooms:GetChildren()[#game.Workspace.CurrentRooms:GetChildren() - 1].Parts.Floor.CFrame + Vector3.new(0, 6, 0)
-workspace.Supervisor.Depth.Attachment.ParticleEmitter.Texture = "rbxassetid://94353367717398"
+workspace.Supervisor.Depth.Attachment.ParticleEmitter.Texture = "rbxassetid://82641394350118"
 workspace.Supervisor.Depth.Attachment.PointLight.Range = 30
 workspace.Supervisor.Depth.Attachment.PointLight.Brightness = 35
-workspace.Supervisor.Depth.Attachment.PointLight.Color = Color3.fromRGB(252, 3, 107)
+workspace.Supervisor.Depth.Attachment.PointLight.Color = Color3.fromRGB(125, 3, 255)
 workspace.Supervisor.Depth.Attachment.Rays:Destroy()
 workspace.Supervisor.Depth.Attachment.Smoke:Destroy()
 local TweenService = game:GetService("TweenService")
@@ -76,7 +76,7 @@ game.Lighting.MainColorCorrection.Contrast = 0
 local tween = game:GetService("TweenService")
 tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
 local TweenService = game:GetService("TweenService")
-local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(10),{TintColor = Color3.fromRGB(252, 3, 107)})
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(10),{TintColor = Color3.fromRGB(125, 3, 255)})
 TW:Play()
 
 function GitAud(soundgit,filename)
@@ -137,7 +137,7 @@ local red = Instance.new("ImageLabel")
 red.Name = "Getdamaged"
 red.Size = UDim2.new(1, 0, 1, 0)
 red.BackgroundTransparency = 1 -- Make the background fully transparent
-red.Image = "rbxassetid://71949861179744" -- Set the image using a random Image ID
+red.Image = "rbxassetid://121613387497949" -- Set the image using a random Image ID
 red.ImageTransparency = 0
 red.Parent = screenGui
 wait(0.4)
@@ -162,7 +162,7 @@ end)
 -- Wait for the room to change
 game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
 Kill = false
-game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(252, 3, 107)
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(125, 3, 255)
 game.Lighting.MainColorCorrection.Contrast = 0
 local tween = game:GetService("TweenService")
 tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
@@ -191,5 +191,5 @@ achievementGiver({
     Title = "Stare Over And Over Again",
     Desc = "Don't look at me plis!",
     Reason = "Encounter Supervisor",
-    Image = "rbxassetid://86079727771147"
+    Image = "rbxassetid://109679223983683"
 })
