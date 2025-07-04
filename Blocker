@@ -1,0 +1,92 @@
+local block = game:GetObjects("rbxassetid://113350896200422")[1]
+block.Parent = game.Workspace
+block.CFrame = game.Workspace.CurrentRooms:GetChildren()[#game.Workspace.CurrentRooms:GetChildren() - 1].Door.Door.CFrame + Vector3.new(0,0,0)
+
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+wait(0.2)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(3),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+wait(2)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("15",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("14",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("13",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("12",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("11",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("10",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("9",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("8",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("7",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("6",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("5",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("4",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("3",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("2",true)
+wait(1)
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(169, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("1",true)
+wait(2)
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+wait(0.2)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(3),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+block:Destroy()
+-- Load achievement giver
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Custom%20Achievements/Source.lua"))()
+
+-- Display achievement
+achievementGiver({
+    Title = "Stucked",
+    Desc = "Imma block your ways",
+    Reason = "Encounter Blocker",
+    Image = "rbxassetid://140598133388627"
+})
