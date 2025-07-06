@@ -1,0 +1,314 @@
+local findpart = workspace.CurrentRooms:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value).Assets.TableCloth
+if not findpart then return end
+
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(3),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "SemiGamberVL1"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250706_01.mp3?raw=true", 1, " SemiGamblerSVL1")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 247, 136)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("Oh hi players! Interact me to get a random item!",true)
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+local player = Players.LocalPlayer
+
+local block = game:GetObjects("rbxassetid://77456498278983")[1]
+if not block or not block:IsA("BasePart") then return end
+
+local roomId = ReplicatedStorage:WaitForChild("GameData"):WaitForChild("LatestRoom").Value
+local room = workspace.CurrentRooms:FindFirstChild(tostring(roomId))
+if not room then return end
+
+local surface
+local assets = room:FindFirstChild("Assets")
+if assets then
+	for _, part in ipairs(assets:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name == "TableCloth" then
+			surface = part
+			break
+		end
+	end
+end
+if not surface then return end
+
+local clone = block:Clone()
+clone.Anchored = false
+clone.CanCollide = true
+clone.Massless = false
+clone.Position = surface.Position + Vector3.new(0, clone.Size.Y / 2 + 0.05, 0)
+clone.Parent = workspace
+
+local weld = Instance.new("WeldConstraint", clone)
+weld.Part0 = clone
+weld.Part1 = surface
+weld.Parent = clone
+
+local pickupPrompt = Instance.new("ProximityPrompt", clone)
+pickupPrompt.ActionText = "Pick up"
+pickupPrompt.ObjectText = "Mystery Block"
+pickupPrompt.RequiresLineOfSight = false
+pickupPrompt.MaxActivationDistance = 8
+pickupPrompt.HoldDuration = 1.5
+pickupPrompt.Style = Enum.ProximityPromptStyle.Custom
+pickupPrompt.Exclusivity = Enum.ProximityPromptExclusivity.OnePerButton
+
+pickupPrompt.Triggered:Connect(function(plr)
+	if not plr:FindFirstChild("Backpack") then return end
+	local tool = Instance.new("Tool")
+	tool.Name = "BlockItem"
+	tool.RequiresHandle = true
+	tool.TextureId = "rbxassetid://93750871702564"
+	local handle = block:Clone()
+	handle.Name = "Handle"
+	handle.Anchored = false
+	handle.CanCollide = false
+	handle.Massless = true
+	handle.Parent = tool
+	tool.Grip = CFrame.new(0,0,0)
+	tool.Parent = plr:FindFirstChild("Backpack")
+	clone:Destroy()
+end)
+
+local function createFakeDoorsButton()
+	if player:FindFirstChild("PlayerGui"):FindFirstChild("BlockButtonGui") then return end
+	local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+	gui.Name = "BlockButtonGui"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	local btnFrame = Instance.new("Frame")
+	btnFrame.Name = "ItemButton"
+	btnFrame.Size = UDim2.new(0, 60, 0, 60)
+	btnFrame.Position = UDim2.new(1, -100, 1, -150)
+	btnFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	btnFrame.BorderSizePixel = 0
+	btnFrame.BackgroundTransparency = 0.2
+	btnFrame.AnchorPoint = Vector2.new(0, 0)
+	btnFrame.Visible = false
+	btnFrame.ClipsDescendants = true
+	btnFrame.Parent = gui
+	local uicorner = Instance.new("UICorner", btnFrame)
+	uicorner.CornerRadius = UDim.new(1, 0)
+	local icon = Instance.new("ImageButton")
+	icon.Name = "Icon"
+	icon.Size = UDim2.new(1, 0, 1, 0)
+	icon.Position = UDim2.new(0, 0, 0, 0)
+	icon.BackgroundTransparency = 1
+	icon.Image = "rbxassetid://131401860765140"
+	icon.Parent = btnFrame
+	local uistroke = Instance.new("UIStroke")
+	uistroke.Thickness = 1.5
+	uistroke.Color = Color3.fromRGB(80, 80, 80)
+	uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	uistroke.Parent = btnFrame
+	icon.MouseEnter:Connect(function()
+		uistroke.Color = Color3.fromRGB(255, 255, 255)
+	end)
+	icon.MouseLeave:Connect(function()
+		uistroke.Color = Color3.fromRGB(80, 80, 80)
+	end)
+	icon.MouseButton1Click:Connect(function()
+		local function giveItem(itemType)
+			if itemType == "Crucifix" then
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/PenguinManiack/Crucifix/main/Crucifix.lua"))()
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "Yippiee"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250706_02.mp3?raw=true", 1, " Yippie")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You got a Crucifix",true)
+			elseif itemType == "Curious_Crucifix" then
+			_G.CR_Uses = 1
+_G.CR_IsCurious = true
+_G.CR_HoldKeyRequired = "false"
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/IdkMyNameLoll/PublicScripts/refs/heads/main/crucifix_E_A_A"))()
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "Yippiee"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250706_02.mp3?raw=true", 1, " Yippie")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You got a Curious Crucifix",true)
+wait(2.5)
+game.Workspace.Yippiee:Destroy()
+			elseif itemType == "nothing" then
+			function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "GETOUTT"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250706_03.mp3?raw=true", 1, " GETOUT")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You got nothing!",true)
+			elseif itemType == "nothing2" then
+				function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "GETOUTT"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250706_03.mp3?raw=true", 1, " GETOUT")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You got nothing!",true)
+			elseif itemType == "Minecraft_Sword" then
+				function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "Boom"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20250706_04.mp3?raw=true", 1, " TheRock")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You got a Minecraft Sword! (Useless)",true)
+
+local sword = game:GetObjects("rbxassetid://5138636091")[1]
+       sword.Name = "Minecraft_Sword"
+				if sword and sword:IsA("Tool") then
+					local handle = sword:FindFirstChild("Handle")
+					if handle then
+						handle.Anchored = false
+						handle.CanCollide = false
+						handle.Massless = true
+					end
+					sword.Parent = player.Backpack
+					local anim = Instance.new("Animation")
+					anim.AnimationId = "rbxassetid://180435571"
+					local track
+					sword.Equipped:Connect(function()
+						local char = player.Character or player.CharacterAdded:Wait()
+						local hum = char:FindFirstChildOfClass("Humanoid")
+						if hum then
+							track = hum:LoadAnimation(anim)
+							track:Play()
+						end
+					end)
+					sword.Unequipped:Connect(function()
+						if track then track:Stop() end
+wait(85)
+game.Players.LocalPlayer.Backpack.Minecraft_Sword:Destroy()
+					end)
+				end
+			end
+		end
+		local items = {"Crucifix", "Curious_Crucifix", "nothing", "nothing2", "Minecraft_Sword"}
+		local choice = items[math.random(1, #items)]
+		giveItem(choice)
+		local tool = player.Character and player.Character:FindFirstChild("BlockItem") or player.Backpack:FindFirstChild("BlockItem")
+		if tool then
+			tool:Destroy()
+		end
+		local hint = Instance.new("Hint", workspace)
+		hint.Text = "You received: " .. choice
+		Debris:AddItem(hint, 2)
+	end)
+	return btnFrame
+end
+
+task.spawn(function()
+	local btn = createFakeDoorsButton()
+	while true do
+		task.wait(0.2)
+		local char = player.Character
+		local tool = char and char:FindFirstChildOfClass("Tool")
+		btn.Visible = tool and tool.Name == "BlockItem"
+	end
+end)
