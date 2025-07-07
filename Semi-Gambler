@@ -1,4 +1,4 @@
-local findpart = workspace.CurrentRooms:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value).Assets.TableCloth
+local findpart = workspace.CurrentRooms:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value).Assets.Table.TableCloth
 if not findpart then return end
 
 game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
