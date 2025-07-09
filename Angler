@@ -1,0 +1,74 @@
+-- Jumpscare Angler
+game.Players.LocalPlayer.PlayerGui.MainUI.Jumpscare.Jumpscare_Rush.ImageLabel.Image = "rbxassetid://109350077463234"
+game.Players.LocalPlayer.PlayerGui.MainUI.Jumpscare.Jumpscare_Rush.ImageLabelBig.Image = "rbxassetid://109350077463234"
+
+-- Angler
+coroutine.wrap(function()
+    while true do
+        wait()
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(5)
+
+if game.Workspace:FindFirstChild("RushMoving") then
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "Far"
+    sound.Volume = 2
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/angler%20xa.mp3?raw=true", 1, " Far")
+
+game.Workspace.RushMoving.RushNew.Attachment.ParticleEmitter.Texture = "rbxassetid://109350077463234"    game.Workspace.RushMoving.RushNew.PlaySound.PlaybackSpeed = 0
+game.Workspace.RushMoving.RushNew.PlaySound.RollOfMaxDistance = 0 game.Workspace.RushMoving.RushNew.Footsteps.PlaybackSpeed = 0
+workspace.RushMoving.RushNew.Footsteps.SoundId = "rbxassetid://0"
+workspace.RushMoving.RushNew.Footsteps.RollOffMaxDistance = 0
+workspace.RushMoving.RushNew.PlaySound.SoundId = "rbxassetid://0"
+workspace.RushMoving.RushNew.Footsteps.DistortionSoundEffect:Destroy()
+workspace.RushMoving.RushNew.Footsteps.EqualizerSoundEffect:Destroy()
+workspace.RushMoving.RushNew.Footsteps.FlangeSoundEffect:Destroy()
+workspace.RushMoving.RushNew.Footsteps.TremoloSoundEffect:Destroy()
+workspace.RushMoving.RushNew.PlaySound.DistortionSoundEffect:Destroy()
+workspace.RushMoving.RushNew.PlaySound.EqualizerSoundEffect:Destroy()
+workspace.RushMoving.RushNew.PlaySound.FlangeSoundEffect:Destroy()
+workspace.RushMoving.RushNew.PlaySound.TremoloSoundEffect:Destroy()
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Angler"
+
+workspace.RushMoving.RushNew.Attachment.BlackTrail:Destroy()
+workspace.RushMoving.RushNew.Attachment.Black:Destroy()
+local smoke = Instance.new("Smoke")
+	smoke.Parent = game.Workspace.RushMoving.RushNew.Attachment
+	smoke.Name = "Smoke1"
+  smoke.Color = Color3.fromRGB(255, 255, 255)
+wait(7)
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "Near"
+    sound.Volume = 2
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/angler%20g%E1%BA%A7n.mp3?raw=true", 1, " Near")
+end
+end
+end)()
