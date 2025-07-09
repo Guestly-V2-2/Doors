@@ -69,6 +69,10 @@ function CustomGitSound(soundlink, vol, filename)
 end
 
 CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/angler%20g%E1%BA%A7n.mp3?raw=true", 1, " Near")
+
+wait(8)
+game.Workspace.Far:Destroy()
+game.Workspace.Near:Destroy()
 end
 end
 end)()
