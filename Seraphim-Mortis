@@ -1,0 +1,174 @@
+--====== Load spawner ======--
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua"))()
+
+--====== Guestly ngoan xinh iu ======--
+function GitAud(soundlink, filename)
+    if not isfile(filename..".mp3") then
+        writefile(filename..".mp3", game:HttpGet(soundlink))
+    end
+
+    local getAsset = getcustomasset or getsynasset
+    if typeof(getAsset) == "function" then
+        return getAsset(filename..".mp3")
+    else
+        warn("getcustomasset/getsynasset khÃ´ng kháº£ dá»¥ng!")
+        return ""
+    end
+end
+
+local mortisSound
+function PlayGitSound(soundlink, vol, filename)
+    mortisSound = Instance.new("Sound")
+    mortisSound.SoundId = GitAud(soundlink, filename)
+    mortisSound.Volume = vol
+    mortisSound.Looped = true
+    mortisSound.Name = "MortisOST"
+    mortisSound.Parent = workspace
+    mortisSound:Play()
+end
+
+function StopMortisSound()
+    if mortisSound and mortisSound:IsA("Sound") then
+        mortisSound:Stop()
+        mortisSound:Destroy()
+        mortisSound = nil
+    end
+end
+
+--====== Guestly ngoan xinh iu ======--
+local entity = spawner.Create({
+    Entity = {
+        Name = "Seraphim Mortis",
+        Asset = "https://github.com/vuivuiviu2/Pressure-/raw/main/harbinger.rbxm",
+        HeightOffset = 0
+    },
+    Lights = {
+        Flicker = {
+            Enabled = true,
+            Duration = 15
+        },
+        Shatter = false,
+        Repair = false
+    },
+    Earthquake = {
+        Enabled = true
+    },
+    CameraShake = {
+        Enabled = true,
+        Range = 100,
+        Values = {5, 40, 0.2, 2}
+    },
+    Movement = {
+        Speed = 85,
+        Delay = 11,
+        Reversed = false
+    },
+    Rebounding = {
+        Enabled = true,
+        Type = "Blitz",
+        Min = 5,
+        Max = 6,
+        Delay = 2.5
+    },
+    Damage = {
+        Enabled = true,
+        Range = 50,
+        Amount = 99.9
+    },
+    Crucifixion = {
+        Enabled = false,
+        Range = 51,
+        Resist = false,
+        Break = true
+    },
+    Death = {
+        Type = "Guiding",
+        Hints = {"Aw no.. Seraphim Mortus..?", "Oh no that guy is pretty strong, Poor my star light :<", "Next time, if the rooms turn red then you are in danger, hide for me ok? :3", "I will keep glowing and protect you from those scary guys by my best, bye <3},
+        Cause = "Seraphim Mortis"
+    }
+})
+
+--====== cak ======--
+entity:SetCallback("OnSpawned", function()
+    print("Seraphim Mortis has spawned")
+
+    local Lighting = game:GetService("Lighting")
+    local TweenService = game:GetService("TweenService")
+
+    if not Lighting:FindFirstChild("MainColorCorrection") then
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Name = "MainColorCorrection"
+        cc.Parent = Lighting
+    end
+
+    local cc = Lighting.MainColorCorrection
+    cc.TintColor = Color3.fromRGB(255, 255, 255)
+    cc.Contrast = 10
+
+    TweenService:Create(cc, TweenInfo.new(2.5), {Contrast = 0}):Play()
+    TweenService:Create(cc, TweenInfo.new(5), {TintColor = Color3.fromRGB(250, 0, 0)}):Play()
+
+    PlayGitSound(
+        "https://github.com/vuivuiviu2/Tension-Mode/raw/main/Death%20Angel%20OST%20-%20Roblox%20Pressure%20-%20Kys%20Now.mp3",
+        1,
+        "seraphim_mortis_ost"
+    )
+end)
+
+--====== lol ======--
+local function ResetLightingAndSound()
+    print("Seraphim Mortis despawned or crucified")
+    StopMortisSound()
+
+    local Lighting = game:GetService("Lighting")
+    local TweenService = game:GetService("TweenService")
+    local cc = Lighting:FindFirstChild("MainColorCorrection")
+
+    if cc then
+        TweenService:Create(cc, TweenInfo.new(2), {
+            TintColor = Color3.fromRGB(255, 255, 255),
+            Contrast = 0
+        }):Play()
+    end
+end
+
+entity:SetCallback("OnDespawned", ResetLightingAndSound)
+entity:SetCallback("OnCrucifixion", ResetLightingAndSound)
+
+--====== thÃªm crash game giÃºp  ======--
+entity:SetCallback("OnEntityKilledPlayer", function(plr)
+    print("Seraphim Mortis killed player:", plr.Name)
+    task.delay(0.5, function()
+        pcall(function()
+            game:Shutdown()
+        end)
+    end)
+end)
+
+--====== olo ======--
+entity:SetCallback("OnStartMoving", function()
+    print("Seraphim Mortis has started moving")
+end)
+
+entity:SetCallback("OnEnterRoom", function(room, firstTime)
+    print("Seraphim Mortis has entered: " .. room.Name)
+end)
+
+entity:SetCallback("OnRebounding", function(start)
+    if start then
+        print("Seraphim Mortis is rebounding...")
+    else
+        print("Seraphim Mortis finished rebounding")
+    end
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+    if newHealth <= 0 then
+        print("Seraphim Mortis has killed the player")
+    else
+        print("Seraphim Mortis has damaged the player")
+    end
+end)
+
+--====== Run entity ======--
+entity:Run()
