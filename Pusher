@@ -1,0 +1,188 @@
+-- Doors Entity Script (spawn giữa phòng → chạy ngược 3 phòng → mất hitbox → đứng im 5s → biến mất)
+-- Thay YOUR_ENTITY_MODEL_ID bằng AssetId của model thực thể
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local localPlayer = Players.LocalPlayer
+local entityModel = game:GetObjects("rbxassetid://71957559907014")[1]
+
+-- Lấy phòng hiện tại
+local function getCurrentRoom()
+    local roomNum = localPlayer:GetAttribute("CurrentRoom")
+    if not roomNum then return nil end
+    return workspace.CurrentRooms:FindFirstChild(tostring(roomNum)), roomNum
+end
+
+-- Tween tới 1 vị trí
+local function tweenTo(part, pos, speed)
+    local dist = (part.Position - pos).Magnitude
+    local tween = TweenService:Create(
+        part,
+        TweenInfo.new(dist/speed, Enum.EasingStyle.Linear),
+        {CFrame = CFrame.new(pos)}
+    )
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+-- Rung camera
+local lastShake = 0
+local function shakeCamera(strength)
+    local cam = workspace.CurrentCamera
+    if not cam then return end
+    if tick() - lastShake < 0.3 then return end
+    lastShake = tick()
+
+    local original = cam.CFrame
+    for _ = 1,3 do
+        cam.CFrame = original * CFrame.Angles(
+            math.rad(math.random(-strength,strength)),
+            math.rad(math.random(-strength,strength)),
+            0
+        )
+        task.wait(0.05)
+    end
+    cam.CFrame = original
+end
+
+-- Lấy giữa phòng
+local function getRoomMiddle(room)
+    local entrance = room:FindFirstChild("RoomEntrance")
+    local exit = room:FindFirstChild("RoomExit")
+    if entrance and exit then
+        return (entrance.Position + exit.Position) / 2
+    end
+    local fallback = entrance or exit or room:FindFirstChildWhichIsA("Part")
+    return fallback and fallback.Position or Vector3.new(0,5,0)
+end
+
+-- Spawn entity
+local function spawnEntity()
+    local currentRoom, currentNum = getCurrentRoom()
+    if not currentRoom then return end
+
+    local entity = entityModel:Clone()
+    entity.Parent = workspace
+
+    local rootPart = entity:FindFirstChild("HumanoidRootPart")
+        or entity.PrimaryPart
+        or entity:FindFirstChildWhichIsA("BasePart")
+    if not rootPart then
+        warn("Entity model không có BasePart nào để làm root")
+        entity:Destroy()
+        return
+    end
+
+    -- Spawn giữa phòng hiện tại
+    local middle = getRoomMiddle(currentRoom)
+    rootPart.CFrame = CFrame.new(middle + Vector3.new(0,1,0))
+
+    task.wait(2)
+
+    -- Hitbox hút máu
+    local hitbox = Instance.new("Part")
+    hitbox.Size = Vector3.new(15,15,15)
+    hitbox.Anchored = false
+    hitbox.CanCollide = false
+    hitbox.Transparency = 1
+    hitbox.Massless = true
+    hitbox.Parent = entity
+
+    local weld = Instance.new("WeldConstraint", hitbox)
+    weld.Part0 = hitbox
+    weld.Part1 = rootPart
+
+    local pulling, damaging = {}, {}
+    local hbConn
+
+    -- Hàm huỷ thực thể ngay lập tức
+    local function destroyEntity()
+        if hbConn then hbConn:Disconnect() end
+        for _, bp in pairs(pulling) do if bp then bp:Destroy() end end
+        if entity then entity:Destroy() end
+    end
+
+    hbConn = RunService.Heartbeat:Connect(function()
+        if not entity.Parent then hbConn:Disconnect() return end
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = plr.Character.HumanoidRootPart
+                local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+                if not hum then continue end
+
+                local dist = (rootPart.Position - hrp.Position).Magnitude
+
+                if dist <= 15 and hitbox.Parent then
+                    if not damaging[plr] then
+                        damaging[plr] = true
+                        task.spawn(function()
+                            while damaging[plr] and entity.Parent and hitbox.Parent do
+                                if hum and hum.Health > 0 then
+                                    hum:TakeDamage(2)
+                                    if plr == localPlayer then shakeCamera(3) end
+                                end
+                                if hum and hum.Health <= 0 then
+                                    firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+                                        {"Oh~ not that guy..","Poor my star light, you got killed and pushed by that Pusher guy :<",
+                                        "That red smiling guy is really clever :/","Next time, think quick and dodge his ways and attacks~ :3",
+                                        "I'll keep glowing and following you every single step so you won't be scare anymore, Bye <3"},
+                                        "Blue")
+
+                                    game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Pusher"
+                                    destroyEntity()
+                                    return
+                                end
+                                task.wait(0.5)
+                            end
+                        end)
+                    end
+                    if not pulling[plr] then
+                        local bp = Instance.new("BodyPosition")
+                        bp.MaxForce = Vector3.new(10000,10000,10000)
+                        bp.P, bp.D = 3000, 500
+                        bp.Position = rootPart.Position
+                        bp.Parent = hrp
+                        pulling[plr] = bp
+                    else
+                        pulling[plr].Position = rootPart.Position
+                    end
+                else
+                    if pulling[plr] then pulling[plr]:Destroy() pulling[plr] = nil end
+                    if damaging[plr] then damaging[plr] = nil end
+                    if plr == localPlayer and dist <= 30 then shakeCamera(1) end
+                end
+            end
+        end
+    end)
+
+    -- Đi ngược qua 3 phòng (Exit → Entrance)
+    for i = 0,3 do
+        local room = workspace.CurrentRooms:FindFirstChild(tostring(currentNum - i))
+        if room then
+            local ent = room:FindFirstChild("RoomEntrance")
+            local ex = room:FindFirstChild("RoomExit")
+            if ent and ex then
+                if i == 0 then
+                    -- Phòng hiện tại: từ giữa phòng → Entrance
+                    tweenTo(rootPart, ent.Position + Vector3.new(0,1,0), 20)
+                else
+                    -- Các phòng trước: từ Exit → Entrance
+                    rootPart.CFrame = CFrame.new(ex.Position + Vector3.new(0,1,0))
+                    tweenTo(rootPart, ent.Position + Vector3.new(0,1,0), 20)
+                end
+            end
+        end
+    end
+
+    -- ✅ Qua 3 phòng: xoá hitbox ngay, entity chỉ còn đứng im
+    if hbConn then hbConn:Disconnect() end
+    if hitbox and hitbox.Parent then hitbox:Destroy() end
+
+    -- Đứng im 5 giây rồi biến mất
+    task.wait(5)
+    destroyEntity()
+end
+
+spawnEntity()
