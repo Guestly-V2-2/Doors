@@ -1,0 +1,152 @@
+-- Executor script cho Doors Roblox (entity đứng giữa phòng, cách sàn 1 stud)
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+
+local MODEL_ID = "71957559907014"
+local ENTITY_HEIGHT_OFFSET = 1 -- luôn cao hơn sàn 1 stud
+local MIN_TWEEN_TIME = 2
+local MAX_TWEEN_TIME = 4
+
+local entityModel
+local hitbox
+local stopMoving = false
+
+-- Lấy tâm phòng + kích thước
+local function getRoomCenterAndSize(room)
+    local centerCFrame
+    if room.PrimaryPart then
+        centerCFrame = room.PrimaryPart.CFrame
+    else
+        for _, d in ipairs(room:GetDescendants()) do
+            if d:IsA("BasePart") then
+                centerCFrame = d.CFrame
+                break
+            end
+        end
+    end
+    if not centerCFrame then return nil, nil end
+    local size = room.GetExtentsSize and room:GetExtentsSize() or Vector3.new(20,10,20)
+    return centerCFrame, size
+end
+
+-- Spawn entity
+local function SpawnEntity()
+    local latest = ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("LatestRoom")
+    if not latest then return end
+    local room = workspace.CurrentRooms:FindFirstChild(tostring(latest.Value))
+    if not room then return end
+
+    local centerCFrame, roomSize = getRoomCenterAndSize(room)
+    if not centerCFrame then return end
+
+    -- Load model
+    local model = game:GetObjects("rbxassetid://"..MODEL_ID)[1]
+    model.Parent = workspace
+    entityModel = model
+
+    -- Set PrimaryPart nếu chưa có
+    if not model.PrimaryPart then
+        if model:FindFirstChild("HumanoidRootPart") then
+            model.PrimaryPart = model.HumanoidRootPart
+        else
+            for _, part in ipairs(model:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    model.PrimaryPart = part
+                    break
+                end
+            end
+        end
+    end
+    if not model.PrimaryPart then
+        warn("Model không có PrimaryPart")
+        return
+    end
+
+    -- Spawn giữa phòng, cách sàn 1 stud
+    local spawnPos = Vector3.new(
+        centerCFrame.Position.X,
+        centerCFrame.Position.Y + ENTITY_HEIGHT_OFFSET,
+        centerCFrame.Position.Z
+    )
+    model:SetPrimaryPartCFrame(CFrame.new(spawnPos))
+
+    -- Hitbox
+    hitbox = Instance.new("Part")
+    hitbox.Size = Vector3.new(15,15,15)
+    hitbox.Transparency = 1
+    hitbox.Anchored = true
+    hitbox.CanCollide = false
+    hitbox.Parent = model
+
+    RunService.Heartbeat:Connect(function()
+        if model.PrimaryPart then
+            hitbox.CFrame = model.PrimaryPart.CFrame
+        end
+    end)
+
+    -- Khi chạm hitbox -> trừ máu + đẩy ra
+    local touchedDebounces = {}
+    hitbox.Touched:Connect(function(part)
+        if not part or not part.Parent then return end
+        local character = part:FindFirstAncestorOfClass("Model")
+        if not character then return end
+        local humanoid = character:FindFirstChild("Humanoid")
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if not humanoid or not root then return end
+        if touchedDebounces[character] then return end
+        touchedDebounces[character] = true
+
+        humanoid:TakeDamage(5)
+        local dir = (root.Position - model.PrimaryPart.Position)
+        if dir.Magnitude == 0 then dir = Vector3.new(0,0,1) end
+        local bv = Instance.new("BodyVelocity")
+        bv.Velocity = dir.Unit * 50
+        bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+        bv.Parent = root
+        Debris:AddItem(bv,0.15)
+
+        task.delay(0.25, function() touchedDebounces[character] = nil end)
+    end)
+
+    -- Khi mở cửa tiếp theo -> xoá entity
+    latest:GetPropertyChangedSignal("Value"):Connect(function()
+        if entityModel and entityModel.Parent then
+            entityModel:Destroy()
+            stopMoving = true
+        end
+    end)
+
+    -- Sau 3s -> bắt đầu di chuyển trong phòng
+    task.delay(3, function()
+        while model.Parent and not stopMoving do
+            local halfX, halfZ = roomSize.X/2 - 3, roomSize.Z/2 - 3
+            local rx = (math.random() * 2 - 1) * halfX
+            local rz = (math.random() * 2 - 1) * halfZ
+            local targetPos = Vector3.new(centerCFrame.Position.X + rx, spawnPos.Y, centerCFrame.Position.Z + rz)
+
+            -- Thỉnh thoảng tween tới player
+            if math.random() < 0.3 then
+                local player = Players.LocalPlayer
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    targetPos = Vector3.new(player.Character.HumanoidRootPart.Position.X, spawnPos.Y, player.Character.HumanoidRootPart.Position.Z)
+                end
+            end
+
+            local tweenTime = math.random(MIN_TWEEN_TIME, MAX_TWEEN_TIME)
+            local tween = TweenService:Create(
+                model.PrimaryPart,
+                TweenInfo.new(tweenTime, Enum.EasingStyle.Linear),
+                {CFrame = CFrame.new(targetPos)}
+            )
+            tween:Play()
+            tween.Completed:Wait()
+            task.wait(0.2)
+        end
+    end)
+end
+
+SpawnEntity()
