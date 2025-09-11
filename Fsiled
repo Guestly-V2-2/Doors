@@ -1,0 +1,124 @@
+-- Script: Spawn thực thể trong tủ + Jumpscare
+-- ⚠️ Bạn hãy thay ID model, ID mặt, và ID âm thanh jumpscare vào các chỗ ghi chú
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenInfoQuick = TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true)
+local TweenInfoFade = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+
+-- ====== ID thay thế ở đây ======
+local ENTITY_MODEL_ID = "rbxassetid://130900834723399" -- ID model thực thể
+local ENTITY_FACE_ID = "rbxassetid://72016877933450"   -- ID mặt trong jumpscare
+local JUMPSCARE_SOUND_ID = "rbxassetid://130990524400761" -- ID âm thanh jumpscare
+-- ===============================
+
+-- ===== Hàm spawn entity vào tủ ngẫu nhiên =====
+local function spawnEntityInRandomWardrobe()
+    local wardrobes = {}
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name == "Wardrobe" and obj:FindFirstChild("Main") then
+            table.insert(wardrobes, obj)
+        end
+    end
+
+    if #wardrobes > 0 then
+        local chosen = wardrobes[math.random(1, #wardrobes)]
+
+        -- Nạp model thực thể từ ID
+        local success, entityModel = pcall(function()
+            return game:GetObjects(ENTITY_MODEL_ID)[1]
+        end)
+
+        if success and entityModel then
+            entityModel.Name = "ScareEntity"
+            entityModel.Parent = chosen
+            entityModel:SetPrimaryPartCFrame(chosen.Main.CFrame * CFrame.new(0, 0, -1))
+
+            -- Gắn marker để nhận biết
+            local marker = Instance.new("BoolValue")
+            marker.Name = "EntityInside"
+            marker.Parent = chosen
+        end
+    end
+end
+
+-- ===== Hàm jumpscare =====
+local function doJumpscare()
+    -- GUI nền
+    local screengui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+    screengui.IgnoreGuiInset = true
+    screengui.ResetOnSpawn = false
+
+    local bg = Instance.new("Frame", screengui)
+    bg.Size = UDim2.new(1,0,1,0)
+    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- xanh biển
+    bg.ZIndex = 5
+
+    -- Mặt thực thể
+    local face = Instance.new("ImageLabel", screengui)
+    face.Size = UDim2.new(1,0,1,0)
+    face.BackgroundTransparency = 1
+    face.Image = ENTITY_FACE_ID
+    face.ZIndex = 10
+
+    -- Âm thanh
+    local sound = Instance.new("Sound", LocalPlayer.PlayerGui)
+    sound.SoundId = JUMPSCARE_SOUND_ID
+    sound:Play()
+
+    -- Tween đổi màu nền xanh ↔ đen
+    local colorTween = TweenService:Create(bg, TweenInfoQuick, {BackgroundColor3 = Color3.fromRGB(0,0,0)})
+    colorTween:Play()
+
+    -- Tween rung mặt dữ dội
+    local intenseShake = TweenService:Create(face, TweenInfo.new(0.05, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true), {
+        Position = UDim2.new(0, math.random(-20,20), 0, math.random(-20,20))
+    })
+    intenseShake:Play()
+
+    -- Sau 1 giây thì dừng jumpscare
+    task.delay(1, function()
+        colorTween:Cancel()
+        intenseShake:Cancel()
+
+        -- Tween rung nhẹ dần
+        local softShake = TweenService:Create(face, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0,0,0,0)
+        })
+        softShake:Play()
+
+        -- Fade nền và mặt
+        local fadeBg = TweenService:Create(bg, TweenInfoFade, {BackgroundTransparency = 1})
+        local fadeFace = TweenService:Create(face, TweenInfoFade, {ImageTransparency = 1})
+        fadeBg:Play()
+        fadeFace:Play()
+
+        -- Xóa GUI sau 0.6 giây
+        task.delay(0.6, function()
+            screengui:Destroy()
+            sound:Destroy()
+        end)
+    end)
+end
+
+-- ===== Kết nối khi mở tủ có thực thể =====
+for _, obj in pairs(workspace:GetDescendants()) do
+    if obj.Name == "Wardrobe" and obj:FindFirstChild("Main") then
+        local prompt = obj.Main:FindFirstChildOfClass("ProximityPrompt")
+        if prompt then
+            prompt.Triggered:Connect(function(plr)
+                if plr == LocalPlayer and obj:FindFirstChild("EntityInside") then
+                    doJumpscare()
+                    obj.EntityInside:Destroy()
+                    if obj:FindFirstChild("ScareEntity") then
+                        obj.ScareEntity:Destroy()
+                    end
+                end
+            end)
+        end
+    end
+end
+
+-- Spawn entity trong 1 tủ ngẫu nhiên
+spawnEntityInRandomWardrobe()
