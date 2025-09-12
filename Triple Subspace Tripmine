@@ -1,0 +1,641 @@
+-- Script spawn thực thể ngẫu nhiên trong phòng hiện tại (Executor)
+-- Bạn cần thay các ID ở dưới: ModelID, FaceImageID, và JUMPSCARE_SOUND_ID
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Thay các ID này:
+local ENTITY_MODEL_ID = "rbxassetid://87481248956655" -- id model thực thể 3D
+local ENTITY_FACE_ID = "rbxassetid://18832439007" -- id mặt thực thể (jumpscare GUI)
+local JUMPSCARE_SOUND_ID = "rbxassetid://17707206608" -- id âm thanh jumpscare (Roblox asset id)
+
+-- Script khác sẽ chạy nếu player chết
+local SCRIPT_TO_EXECUTE = [[
+-- Đây là script khác, bạn tự thay nội dung
+print("Player đã chết bởi thực thể, script khác được chạy!")
+firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"...","What's that thing??","Oh i see.. It seems like you dead to a Subspace Tripmine","Couldn't you just dodge it?? It just likes bombs","Next time, use your brain cleverly.."},"Blue")
+
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Subspace Tripmine"
+]]
+
+-- Spawn thực thể ở 1 chỗ ngẫu nhiên trong phòng hiện tại
+local currentRoom = workspace.CurrentRooms:FindFirstChild(player:GetAttribute("CurrentRoom"))
+if not currentRoom then return end
+
+local entity = game:GetObjects(ENTITY_MODEL_ID)[1]
+entity.Parent = workspace
+
+-- Nếu model chưa có PrimaryPart thì chọn part đầu tiên làm PrimaryPart
+if not entity.PrimaryPart then
+    local firstPart = entity:FindFirstChildWhichIsA("BasePart")
+    if firstPart then
+        entity.PrimaryPart = firstPart
+    end
+end
+
+-- Lấy thông tin phòng hiện tại
+local roomCFrame, roomSize = currentRoom:GetBoundingBox()
+
+-- Hàm kiểm tra xem vị trí spawn có bị dính vào tường không
+local function isValidPosition(cframe)
+    local overlapParams = OverlapParams.new()
+    overlapParams.FilterDescendantsInstances = {entity}
+    overlapParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local parts = workspace:GetPartBoundsInBox(cframe, entity:GetExtentsSize(), overlapParams)
+    for _, part in ipairs(parts) do
+        if part.CanCollide and not part:IsDescendantOf(currentRoom) then
+            return false -- dính tường ngoài map
+        end
+        if part:IsDescendantOf(currentRoom) and part.Name:lower():find("wall") then
+            return false -- dính tường trong phòng
+        end
+    end
+    return true
+end
+
+-- Hàm chọn vị trí spawn hợp lệ trong phòng
+local function getValidSpawnPosition()
+    local maxAttempts = 30
+    for i = 1, maxAttempts do
+        local offset = Vector3.new(
+            math.random(-roomSize.X/2, roomSize.X/2),
+            5,
+            math.random(-roomSize.Z/2, roomSize.Z/2)
+        )
+        local candidate = roomCFrame.Position + offset
+
+        local rayOrigin = candidate
+        local rayDirection = Vector3.new(0, -20, 0)
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterDescendantsInstances = {entity}
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+        local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+        if result and result.Instance and result.Instance:IsDescendantOf(currentRoom) then
+            local spawnCFrame = CFrame.new(result.Position + Vector3.new(0, 2, 0))
+            if isValidPosition(spawnCFrame) then
+                return spawnCFrame
+            end
+        end
+    end
+    return nil -- không tìm được chỗ hợp lệ thì bỏ
+end
+
+local spawnCFrame = getValidSpawnPosition()
+if not spawnCFrame then
+    entity:Destroy()
+    return
+end
+entity:SetPrimaryPartCFrame(spawnCFrame)
+
+-- Tạo hitbox nổ (3D) = 15
+local hitbox = Instance.new("Part")
+hitbox.Anchored = true
+hitbox.CanCollide = false
+hitbox.Transparency = 1
+hitbox.Size = Vector3.new(15,15,15)
+hitbox.CFrame = entity.PrimaryPart.CFrame
+hitbox.Parent = entity
+
+-- Hàm xử lý khi player chạm hitbox
+local function triggerJumpscare()
+    -- Xóa entity
+    entity:Destroy()
+
+    -- Âm thanh jumpscare
+    local sound = Instance.new("Sound")
+    sound.SoundId = JUMPSCARE_SOUND_ID
+    sound.Parent = camera
+    sound:Play()
+
+    -- GUI jumpscare
+    local gui = Instance.new("ScreenGui", player.PlayerGui)
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+
+    -- Mặt thực thể hiển thị đúng tỉ lệ gốc
+    local face = Instance.new("ImageLabel")
+    face.Image = ENTITY_FACE_ID
+    face.Size = UDim2.new(0.6,0,0.6,0) -- chiếm 60% màn hình
+    face.AnchorPoint = Vector2.new(0.5, 0.5)
+    face.Position = UDim2.new(0.5, 0, 0.5, 0) -- căn giữa
+    face.BackgroundTransparency = 1
+    face.Parent = gui
+
+    local aspect = Instance.new("UIAspectRatioConstraint")
+    aspect.AspectRatio = 1 -- giữ nguyên tỉ lệ gốc
+    aspect.Parent = face
+
+    -- Gây damage cho player
+    local char = player.Character
+    local humanoid = char and char:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid:TakeDamage(50)
+        humanoid.Died:Connect(function()
+            loadstring(SCRIPT_TO_EXECUTE)()
+        end)
+    end
+
+    -- Đẩy player 5 studs
+    if char and char:FindFirstChild("HumanoidRootPart") and entity.PrimaryPart then
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local direction = (root.Position - entity.PrimaryPart.Position).Unit
+        root.CFrame = root.CFrame + direction * 5
+    end
+
+    -- Hiệu ứng tím bằng Lighting
+    local effect = Instance.new("ColorCorrectionEffect")
+    effect.TintColor = Color3.fromRGB(128, 0, 128)
+    effect.Saturation = 0.8
+    effect.Contrast = 0.5
+    effect.Parent = Lighting
+
+    local tween = TweenService:Create(effect, TweenInfo.new(5, Enum.EasingStyle.Linear), {
+        TintColor = Color3.fromRGB(255, 255, 255),
+        Saturation = 0,
+        Contrast = 0
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        effect:Destroy()
+    end)
+
+    -- Hiệu ứng rung mạnh + fade out
+    local startTime = tick()
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        local elapsed = tick() - startTime
+
+        if elapsed <= 1 then
+            -- Rung cực mạnh: ảnh + camera
+            face.Position = UDim2.new(0.5 + math.random(-10,10)/100,
+                                      0,
+                                      0.5 + math.random(-10,10)/100,
+                                      0)
+            camera.CFrame = camera.CFrame * CFrame.new(
+                math.random(-3,3),
+                math.random(-3,3),
+                0
+            )
+        elseif elapsed <= 6 then
+            local alpha = (elapsed-1)/5
+            face.ImageTransparency = alpha
+
+            -- Ảnh rung nhẹ dần
+            face.Position = UDim2.new(0.5 + math.random(-5,5)/200,
+                                      0,
+                                      0.5 + math.random(-5,5)/200,
+                                      0)
+
+            -- Camera rung nhẹ dần
+            camera.CFrame = camera.CFrame * CFrame.new(
+                math.random(-2,2)/5*(1-alpha),
+                math.random(-2,2)/5*(1-alpha),
+                0
+            )
+        else
+            connection:Disconnect()
+            gui:Destroy()
+        end
+    end)
+end
+
+-- Kết nối sự kiện Touched
+hitbox.Touched:Connect(function(hit)
+    if hit.Parent == player.Character then
+        triggerJumpscare()
+    end
+end)
+
+-- Script spawn thực thể ngẫu nhiên trong phòng hiện tại (Executor)
+-- Bạn cần thay các ID ở dưới: ModelID, FaceImageID, và JUMPSCARE_SOUND_ID
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Thay các ID này:
+local ENTITY_MODEL_ID = "rbxassetid://87481248956655" -- id model thực thể 3D
+local ENTITY_FACE_ID = "rbxassetid://18832439007" -- id mặt thực thể (jumpscare GUI)
+local JUMPSCARE_SOUND_ID = "rbxassetid://17707206608" -- id âm thanh jumpscare (Roblox asset id)
+
+-- Script khác sẽ chạy nếu player chết
+local SCRIPT_TO_EXECUTE = [[
+-- Đây là script khác, bạn tự thay nội dung
+print("Player đã chết bởi thực thể, script khác được chạy!")
+firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"...","What's that thing??","Oh i see.. It seems like you dead to a Subspace Tripmine","Couldn't you just dodge it?? It just likes bombs","Next time, use your brain cleverly.."},"Blue")
+
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Subspace Tripmine"
+]]
+
+-- Spawn thực thể ở 1 chỗ ngẫu nhiên trong phòng hiện tại
+local currentRoom = workspace.CurrentRooms:FindFirstChild(player:GetAttribute("CurrentRoom"))
+if not currentRoom then return end
+
+local entity = game:GetObjects(ENTITY_MODEL_ID)[1]
+entity.Parent = workspace
+
+-- Nếu model chưa có PrimaryPart thì chọn part đầu tiên làm PrimaryPart
+if not entity.PrimaryPart then
+    local firstPart = entity:FindFirstChildWhichIsA("BasePart")
+    if firstPart then
+        entity.PrimaryPart = firstPart
+    end
+end
+
+-- Lấy thông tin phòng hiện tại
+local roomCFrame, roomSize = currentRoom:GetBoundingBox()
+
+-- Hàm kiểm tra xem vị trí spawn có bị dính vào tường không
+local function isValidPosition(cframe)
+    local overlapParams = OverlapParams.new()
+    overlapParams.FilterDescendantsInstances = {entity}
+    overlapParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local parts = workspace:GetPartBoundsInBox(cframe, entity:GetExtentsSize(), overlapParams)
+    for _, part in ipairs(parts) do
+        if part.CanCollide and not part:IsDescendantOf(currentRoom) then
+            return false -- dính tường ngoài map
+        end
+        if part:IsDescendantOf(currentRoom) and part.Name:lower():find("wall") then
+            return false -- dính tường trong phòng
+        end
+    end
+    return true
+end
+
+-- Hàm chọn vị trí spawn hợp lệ trong phòng
+local function getValidSpawnPosition()
+    local maxAttempts = 30
+    for i = 1, maxAttempts do
+        local offset = Vector3.new(
+            math.random(-roomSize.X/2, roomSize.X/2),
+            5,
+            math.random(-roomSize.Z/2, roomSize.Z/2)
+        )
+        local candidate = roomCFrame.Position + offset
+
+        local rayOrigin = candidate
+        local rayDirection = Vector3.new(0, -20, 0)
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterDescendantsInstances = {entity}
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+        local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+        if result and result.Instance and result.Instance:IsDescendantOf(currentRoom) then
+            local spawnCFrame = CFrame.new(result.Position + Vector3.new(0, 2, 0))
+            if isValidPosition(spawnCFrame) then
+                return spawnCFrame
+            end
+        end
+    end
+    return nil -- không tìm được chỗ hợp lệ thì bỏ
+end
+
+local spawnCFrame = getValidSpawnPosition()
+if not spawnCFrame then
+    entity:Destroy()
+    return
+end
+entity:SetPrimaryPartCFrame(spawnCFrame)
+
+-- Tạo hitbox nổ (3D) = 15
+local hitbox = Instance.new("Part")
+hitbox.Anchored = true
+hitbox.CanCollide = false
+hitbox.Transparency = 1
+hitbox.Size = Vector3.new(15,15,15)
+hitbox.CFrame = entity.PrimaryPart.CFrame
+hitbox.Parent = entity
+
+-- Hàm xử lý khi player chạm hitbox
+local function triggerJumpscare()
+    -- Xóa entity
+    entity:Destroy()
+
+    -- Âm thanh jumpscare
+    local sound = Instance.new("Sound")
+    sound.SoundId = JUMPSCARE_SOUND_ID
+    sound.Parent = camera
+    sound:Play()
+
+    -- GUI jumpscare
+    local gui = Instance.new("ScreenGui", player.PlayerGui)
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+
+    -- Mặt thực thể hiển thị đúng tỉ lệ gốc
+    local face = Instance.new("ImageLabel")
+    face.Image = ENTITY_FACE_ID
+    face.Size = UDim2.new(0.6,0,0.6,0) -- chiếm 60% màn hình
+    face.AnchorPoint = Vector2.new(0.5, 0.5)
+    face.Position = UDim2.new(0.5, 0, 0.5, 0) -- căn giữa
+    face.BackgroundTransparency = 1
+    face.Parent = gui
+
+    local aspect = Instance.new("UIAspectRatioConstraint")
+    aspect.AspectRatio = 1 -- giữ nguyên tỉ lệ gốc
+    aspect.Parent = face
+
+    -- Gây damage cho player
+    local char = player.Character
+    local humanoid = char and char:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid:TakeDamage(50)
+        humanoid.Died:Connect(function()
+            loadstring(SCRIPT_TO_EXECUTE)()
+        end)
+    end
+
+    -- Đẩy player 5 studs
+    if char and char:FindFirstChild("HumanoidRootPart") and entity.PrimaryPart then
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local direction = (root.Position - entity.PrimaryPart.Position).Unit
+        root.CFrame = root.CFrame + direction * 5
+    end
+
+    -- Hiệu ứng tím bằng Lighting
+    local effect = Instance.new("ColorCorrectionEffect")
+    effect.TintColor = Color3.fromRGB(128, 0, 128)
+    effect.Saturation = 0.8
+    effect.Contrast = 0.5
+    effect.Parent = Lighting
+
+    local tween = TweenService:Create(effect, TweenInfo.new(5, Enum.EasingStyle.Linear), {
+        TintColor = Color3.fromRGB(255, 255, 255),
+        Saturation = 0,
+        Contrast = 0
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        effect:Destroy()
+    end)
+
+    -- Hiệu ứng rung mạnh + fade out
+    local startTime = tick()
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        local elapsed = tick() - startTime
+
+        if elapsed <= 1 then
+            -- Rung cực mạnh: ảnh + camera
+            face.Position = UDim2.new(0.5 + math.random(-10,10)/100,
+                                      0,
+                                      0.5 + math.random(-10,10)/100,
+                                      0)
+            camera.CFrame = camera.CFrame * CFrame.new(
+                math.random(-3,3),
+                math.random(-3,3),
+                0
+            )
+        elseif elapsed <= 6 then
+            local alpha = (elapsed-1)/5
+            face.ImageTransparency = alpha
+
+            -- Ảnh rung nhẹ dần
+            face.Position = UDim2.new(0.5 + math.random(-5,5)/200,
+                                      0,
+                                      0.5 + math.random(-5,5)/200,
+                                      0)
+
+            -- Camera rung nhẹ dần
+            camera.CFrame = camera.CFrame * CFrame.new(
+                math.random(-2,2)/5*(1-alpha),
+                math.random(-2,2)/5*(1-alpha),
+                0
+            )
+        else
+            connection:Disconnect()
+            gui:Destroy()
+        end
+    end)
+end
+
+-- Kết nối sự kiện Touched
+hitbox.Touched:Connect(function(hit)
+    if hit.Parent == player.Character then
+        triggerJumpscare()
+    end
+end)
+
+-- Script spawn thực thể ngẫu nhiên trong phòng hiện tại (Executor)
+-- Bạn cần thay các ID ở dưới: ModelID, FaceImageID, và JUMPSCARE_SOUND_ID
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Thay các ID này:
+local ENTITY_MODEL_ID = "rbxassetid://87481248956655" -- id model thực thể 3D
+local ENTITY_FACE_ID = "rbxassetid://18832439007" -- id mặt thực thể (jumpscare GUI)
+local JUMPSCARE_SOUND_ID = "rbxassetid://17707206608" -- id âm thanh jumpscare (Roblox asset id)
+
+-- Script khác sẽ chạy nếu player chết
+local SCRIPT_TO_EXECUTE = [[
+-- Đây là script khác, bạn tự thay nội dung
+print("Player đã chết bởi thực thể, script khác được chạy!")
+firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"...","What's that thing??","Oh i see.. It seems like you dead to a Subspace Tripmine","Couldn't you just dodge it?? It just likes bombs","Next time, use your brain cleverly.."},"Blue")
+
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Subspace Tripmine"
+]]
+
+-- Spawn thực thể ở 1 chỗ ngẫu nhiên trong phòng hiện tại
+local currentRoom = workspace.CurrentRooms:FindFirstChild(player:GetAttribute("CurrentRoom"))
+if not currentRoom then return end
+
+local entity = game:GetObjects(ENTITY_MODEL_ID)[1]
+entity.Parent = workspace
+
+-- Nếu model chưa có PrimaryPart thì chọn part đầu tiên làm PrimaryPart
+if not entity.PrimaryPart then
+    local firstPart = entity:FindFirstChildWhichIsA("BasePart")
+    if firstPart then
+        entity.PrimaryPart = firstPart
+    end
+end
+
+-- Lấy thông tin phòng hiện tại
+local roomCFrame, roomSize = currentRoom:GetBoundingBox()
+
+-- Hàm kiểm tra xem vị trí spawn có bị dính vào tường không
+local function isValidPosition(cframe)
+    local overlapParams = OverlapParams.new()
+    overlapParams.FilterDescendantsInstances = {entity}
+    overlapParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local parts = workspace:GetPartBoundsInBox(cframe, entity:GetExtentsSize(), overlapParams)
+    for _, part in ipairs(parts) do
+        if part.CanCollide and not part:IsDescendantOf(currentRoom) then
+            return false -- dính tường ngoài map
+        end
+        if part:IsDescendantOf(currentRoom) and part.Name:lower():find("wall") then
+            return false -- dính tường trong phòng
+        end
+    end
+    return true
+end
+
+-- Hàm chọn vị trí spawn hợp lệ trong phòng
+local function getValidSpawnPosition()
+    local maxAttempts = 30
+    for i = 1, maxAttempts do
+        local offset = Vector3.new(
+            math.random(-roomSize.X/2, roomSize.X/2),
+            5,
+            math.random(-roomSize.Z/2, roomSize.Z/2)
+        )
+        local candidate = roomCFrame.Position + offset
+
+        local rayOrigin = candidate
+        local rayDirection = Vector3.new(0, -20, 0)
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterDescendantsInstances = {entity}
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+        local result = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+        if result and result.Instance and result.Instance:IsDescendantOf(currentRoom) then
+            local spawnCFrame = CFrame.new(result.Position + Vector3.new(0, 2, 0))
+            if isValidPosition(spawnCFrame) then
+                return spawnCFrame
+            end
+        end
+    end
+    return nil -- không tìm được chỗ hợp lệ thì bỏ
+end
+
+local spawnCFrame = getValidSpawnPosition()
+if not spawnCFrame then
+    entity:Destroy()
+    return
+end
+entity:SetPrimaryPartCFrame(spawnCFrame)
+
+-- Tạo hitbox nổ (3D) = 15
+local hitbox = Instance.new("Part")
+hitbox.Anchored = true
+hitbox.CanCollide = false
+hitbox.Transparency = 1
+hitbox.Size = Vector3.new(15,15,15)
+hitbox.CFrame = entity.PrimaryPart.CFrame
+hitbox.Parent = entity
+
+-- Hàm xử lý khi player chạm hitbox
+local function triggerJumpscare()
+    -- Xóa entity
+    entity:Destroy()
+
+    -- Âm thanh jumpscare
+    local sound = Instance.new("Sound")
+    sound.SoundId = JUMPSCARE_SOUND_ID
+    sound.Parent = camera
+    sound:Play()
+
+    -- GUI jumpscare
+    local gui = Instance.new("ScreenGui", player.PlayerGui)
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+
+    -- Mặt thực thể hiển thị đúng tỉ lệ gốc
+    local face = Instance.new("ImageLabel")
+    face.Image = ENTITY_FACE_ID
+    face.Size = UDim2.new(0.6,0,0.6,0) -- chiếm 60% màn hình
+    face.AnchorPoint = Vector2.new(0.5, 0.5)
+    face.Position = UDim2.new(0.5, 0, 0.5, 0) -- căn giữa
+    face.BackgroundTransparency = 1
+    face.Parent = gui
+
+    local aspect = Instance.new("UIAspectRatioConstraint")
+    aspect.AspectRatio = 1 -- giữ nguyên tỉ lệ gốc
+    aspect.Parent = face
+
+    -- Gây damage cho player
+    local char = player.Character
+    local humanoid = char and char:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid:TakeDamage(50)
+        humanoid.Died:Connect(function()
+            loadstring(SCRIPT_TO_EXECUTE)()
+        end)
+    end
+
+    -- Đẩy player 5 studs
+    if char and char:FindFirstChild("HumanoidRootPart") and entity.PrimaryPart then
+        local root = char:FindFirstChild("HumanoidRootPart")
+        local direction = (root.Position - entity.PrimaryPart.Position).Unit
+        root.CFrame = root.CFrame + direction * 5
+    end
+
+    -- Hiệu ứng tím bằng Lighting
+    local effect = Instance.new("ColorCorrectionEffect")
+    effect.TintColor = Color3.fromRGB(128, 0, 128)
+    effect.Saturation = 0.8
+    effect.Contrast = 0.5
+    effect.Parent = Lighting
+
+    local tween = TweenService:Create(effect, TweenInfo.new(5, Enum.EasingStyle.Linear), {
+        TintColor = Color3.fromRGB(255, 255, 255),
+        Saturation = 0,
+        Contrast = 0
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        effect:Destroy()
+    end)
+
+    -- Hiệu ứng rung mạnh + fade out
+    local startTime = tick()
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        local elapsed = tick() - startTime
+
+        if elapsed <= 1 then
+            -- Rung cực mạnh: ảnh + camera
+            face.Position = UDim2.new(0.5 + math.random(-10,10)/100,
+                                      0,
+                                      0.5 + math.random(-10,10)/100,
+                                      0)
+            camera.CFrame = camera.CFrame * CFrame.new(
+                math.random(-3,3),
+                math.random(-3,3),
+                0
+            )
+        elseif elapsed <= 6 then
+            local alpha = (elapsed-1)/5
+            face.ImageTransparency = alpha
+
+            -- Ảnh rung nhẹ dần
+            face.Position = UDim2.new(0.5 + math.random(-5,5)/200,
+                                      0,
+                                      0.5 + math.random(-5,5)/200,
+                                      0)
+
+            -- Camera rung nhẹ dần
+            camera.CFrame = camera.CFrame * CFrame.new(
+                math.random(-2,2)/5*(1-alpha),
+                math.random(-2,2)/5*(1-alpha),
+                0
+            )
+        else
+            connection:Disconnect()
+            gui:Destroy()
+        end
+    end)
+end
+
+-- Kết nối sự kiện Touched
+hitbox.Touched:Connect(function(hit)
+    if hit.Parent == player.Character then
+        triggerJumpscare()
+    end
+end)
