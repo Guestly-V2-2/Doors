@@ -125,9 +125,9 @@ local function spawnEntity()
                                 end
                                 if hum and hum.Health <= 0 then
                                     firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
-                                        {"Oh~ not that guy..","Poor my star light, you got killed and pushed by that Pusher guy :<",
-                                        "That red smiling guy is really clever :/","Next time, think quick and dodge his ways and attacks~ :3",
-                                        "I'll keep glowing and following you every single step so you won't be scare anymore, Bye <3"},
+                                        {"Oh.. Who's now??","What.. Isn't it just Pusher?? How could you die by that entity?!",
+                                        "You can't be that dumb..","Why did you not just dodge his ways bruh?",
+                                        "Next time, try to do better and use your brain correctly, Dumbass."},
                                         "Blue")
 
                                     game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Pusher"
