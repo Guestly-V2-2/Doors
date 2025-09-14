@@ -1,0 +1,116 @@
+-- Entity Script cho Doors (executor)
+-- Yêu cầu: Player không nhìn thì bị đuổi, nhìn thì đứng yên
+-- Nếu player trốn trong tủ, entity sẽ đứng trước tủ, cách 10 studs
+-- Entity hút máu khi bắt, biến mất sau khi mở 3 cửa tiếp theo
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- 🟢 ID model entity bạn sẽ tự thêm vào
+local entityId = "rbxassetid://89978287886918"
+
+-- Spawn entity ở phòng hiện tại
+local currentRoom = workspace.CurrentRooms:FindFirstChild(tostring(ReplicatedStorage.GameData.LatestRoom.Value))
+if not currentRoom then return end
+
+local roomEntrance = currentRoom:FindFirstChild("RoomEntrance")
+local roomExit = currentRoom:FindFirstChild("RoomExit")
+
+-- chọn vị trí spawn ngẫu nhiên trong phòng
+local randomPos = currentRoom:FindFirstChild("Assets") and currentRoom.Assets:GetChildren()[math.random(1, #currentRoom.Assets)]
+local spawnPos = randomPos and randomPos.Position or (roomEntrance.Position + (roomExit.Position - roomEntrance.Position) * math.random())
+
+local entity = game:GetObjects(entityId)[1]
+entity.Parent = workspace
+entity:MoveTo(spawnPos)
+
+local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+local holding = false
+local entityActive = true
+local holdConnection, bloodDrainConnection
+
+-- 🔎 Check player có nhìn entity không
+local function IsLookingAtEntity()
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("Head") then return false end
+    local head = char.Head
+    local lookVec = head.CFrame.LookVector
+    local dir = (entity.PrimaryPart.Position - head.Position).Unit
+    return lookVec:Dot(dir) > 0.5 -- player nhìn về phía entity
+end
+
+-- 🛏️ Check player có đang trốn trong tủ không
+local function IsInCloset()
+    local char = LocalPlayer.Character
+    if not char then return false end
+    return char:FindFirstChild("HiddenPlayer") ~= nil
+end
+
+-- 🩸 Bắt và hút máu
+local function HoldPlayer()
+    if holding then return end
+    holding = true
+    if humanoid then
+        humanoid.WalkSpeed = 0
+        humanoid.JumpPower = 0
+    end
+
+    bloodDrainConnection = RunService.Heartbeat:Connect(function()
+        if humanoid and humanoid.Health > 0 then
+            humanoid.Health = humanoid.Health - 1
+firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"Oh..","Interesting","Seems like you died to a sneaky one","Well, In-Overseer likes playing hide and seek..","Next time, try to look at him until open the next door.."},"Blue")
+
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "In-Overseer"
+        end
+    end)
+end
+
+-- 🛑 Thả player và xoá entity
+local function ReleasePlayer()
+    entityActive = false
+    holding = false
+    if humanoid then
+        humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+    end
+    if holdConnection then holdConnection:Disconnect() end
+    if bloodDrainConnection then bloodDrainConnection:Disconnect() end
+    if entity then entity:Destroy() end
+end
+
+-- 👁️ Theo dõi hành vi entity
+RunService.Heartbeat:Connect(function(dt)
+    if not entityActive or not entity or holding == true then return end
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local playerPos = char.HumanoidRootPart.Position
+
+    if IsInCloset() then
+        -- Player trong tủ: entity đến trước tủ, đứng cách 10 studs đối diện
+        local targetPos = playerPos - (char.HumanoidRootPart.CFrame.LookVector * 10)
+        entity:SetPrimaryPartCFrame(CFrame.new(targetPos, playerPos))
+    else
+        if IsLookingAtEntity() then
+            -- Player nhìn: đứng im
+        else
+            -- Player không nhìn: di chuyển về player
+            local dir = (playerPos - entity.PrimaryPart.Position).Unit
+            entity:SetPrimaryPartCFrame(entity.PrimaryPart.CFrame + dir * dt * 15)
+
+            if (entity.PrimaryPart.Position - playerPos).Magnitude < 5 then
+                HoldPlayer()
+            end
+        end
+    end
+end)
+
+-- ⏳ Biến mất sau 3 cửa
+local opened = 0
+ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+    opened += 1
+    if opened >= 3 then
+        ReleasePlayer()
+    end
+end)
