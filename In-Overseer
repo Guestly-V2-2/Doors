@@ -1,0 +1,110 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+local entityId = "rbxassetid://89978287886918" -- 🟢 ID model entity
+local entity = game:GetObjects(entityId)[1]
+entity.Parent = workspace
+
+if not entity.PrimaryPart then
+    entity.PrimaryPart = entity:FindFirstChildWhichIsA("BasePart")
+end
+if not entity.PrimaryPart then return end
+
+-- 🟢 Spawn trong phòng hiện tại, vị trí ngẫu nhiên
+local currentRoom = workspace.CurrentRooms:FindFirstChild(tostring(ReplicatedStorage.GameData.LatestRoom.Value))
+if not currentRoom then return end
+local entrance = currentRoom:FindFirstChild("RoomEntrance")
+local exit = currentRoom:FindFirstChild("RoomExit")
+
+if entrance and exit then
+    local center = entrance.Position:Lerp(exit.Position, 0.5)
+    local offset = Vector3.new(math.random(-15, 15), 0, math.random(-15, 15))
+    local spawnPos = center + offset
+    entity:SetPrimaryPartCFrame(CFrame.new(spawnPos))
+end
+
+local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+local entityActive = true
+local draining = false
+
+-- 🔎 Check player có nhìn entity
+local function IsLookingAtEntity()
+    local camDir = workspace.CurrentCamera.CFrame.LookVector
+    local toEntity = (entity.PrimaryPart.Position - workspace.CurrentCamera.CFrame.Position).Unit
+    return camDir:Dot(toEntity) > 0.8
+end
+
+-- 🛏️ Check player có đang trốn tủ (true/false)
+local function IsInCloset()
+    local char = LocalPlayer.Character
+    if not char then return false end
+    return char:FindFirstChild("HiddenPlayer") ~= nil
+end
+
+-- 🩸 Hút máu player (chỉ khi ngoài tủ)
+local function StartDrain()
+    if draining or not humanoid then return end
+    draining = true
+    task.spawn(function()
+        while entityActive and draining and humanoid and humanoid.Health > 0 do
+            if IsInCloset() then -- 🔒 nếu player trong tủ thì ngắt hút máu
+                draining = false
+                break
+            end
+            humanoid.Health = humanoid.Health - 1
+            task.wait(0.1) -- 1 HP mỗi 0.1 giây
+        end
+
+        if humanoid and humanoid.Health <= 0 then
+            firesignal(ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+                {"Oh..","Interesting","Seems like you died to a sneaky one",
+                "Well, In-Overseer likes playing hide and seek..",
+                "Next time, try to look at him until open the next door.."},"Blue")
+            ReplicatedStorage.GameStats["Player_"..LocalPlayer.Name].Total.DeathCause.Value = "In-Overseer"
+            loadstring(game:HttpGet("https://yourdomain.com/otherscript.lua"))()
+        end
+        draining = false
+    end)
+end
+
+-- 👁️ Vòng lặp chase
+RunService.Heartbeat:Connect(function(dt)
+    if not entityActive or not entity then return end
+    local char = LocalPlayer.Character
+    if not char or not hrp then return end
+    local playerPos = hrp.Position
+
+    if IsLookingAtEntity() then
+        -- Player nhìn entity: đứng im
+        draining = false
+    else
+        -- Player không nhìn: chase tới player
+        local dir = (playerPos - entity.PrimaryPart.Position).Unit
+        local newPos = entity.PrimaryPart.Position + dir * (15 * dt)
+        entity:SetPrimaryPartCFrame(CFrame.new(newPos, playerPos))
+
+        -- Nếu chạm player → chỉ hút máu khi KHÔNG trong tủ
+        if (entity.PrimaryPart.Position - playerPos).Magnitude < 5 then
+            if not IsInCloset() then
+                StartDrain()
+            else
+                draining = false -- trong tủ thì không damage
+            end
+        else
+            draining = false
+        end
+    end
+end)
+
+-- ⏳ Biến mất sau 3 cửa
+local startRoom = ReplicatedStorage.GameData.LatestRoom.Value
+ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+    local nowRoom = ReplicatedStorage.GameData.LatestRoom.Value
+    if nowRoom >= startRoom + 3 then
+        entityActive = false
+        if entity then entity:Destroy() end
+    end
+end)
