@@ -1,0 +1,181 @@
+local AntiDoorOpener = game.ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+game.Players.LocalPlayer.Character.Humanoid:TakeDamage(1000)
+game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Failed to load data"
+end)
+
+local TextChatService = game:GetService('TextChatService')
+
+TextChatService.OnIncomingMessage = function(Message: TextChatMessage)
+    if Message.TextSource then
+        local player = game.Players:GetPlayerByUserId(Message.TextSource.UserId)
+        if player.Name == 'rainbowbacon029' then
+            Message.PrefixText = " <font color='#7B11FD'>[Owner]</font> "
+                .. Message.PrefixText
+        end
+        if player.Name == 'vuivuiviu3' then
+            Message.PrefixText = " <font color='#FFD800'>[Special]</font> "
+                .. Message.PrefixText
+        end
+        if player.Name == 'Whywwhat3' then
+            Message.PrefixText = " <font color='#FFD800'>[Special]</font> "
+                .. Message.PrefixText
+        end
+        if player.Name == 'dimaalt4' or player.Name == 'dima_082ooo' then
+            Message.PrefixText = " <font color='#FFD800'>[Special]</font> "
+                .. Message.PrefixText
+        end
+    end
+end
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = 1
+    sound.PlaybackSpeed = 1
+    sound.Name = "SucK"
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Doors-Guest-Scripts/Tutorial/raw/refs/heads/main/XRecorder_Edited_20250902_02.mp3?raw=true", 1, " SucK1")
+
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('Anarchy Mode Actived!',true)
+wait(2)
+game.Workspace.SucK:Destroy()
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('All credits to Guestly and Vuivuiviu2',true)
+
+-- Paintings Images Changer
+coroutine.wrap(function()
+local painters = 1
+local paints = {
+	[1] = {"rbxassetid://12625633899","Depth The Dark."},
+	[2] = {"rbxassetid://11678966779","WH1T3..."},
+	[3] = {"rbxassetid://11877292178","???"},
+	[5] = {"rbxassetid://128206094637578","Guestly."},
+      [6] = {"rbxassetid://82969730394546","Vuivuiviu2."},
+	[8] = {"rbxassetid://13187070161","Smiler - Dupe."},
+	[9] = {"rbxassetid://91844042069377","Nowhywhat."}
+}
+
+-- New Paintings
+game:GetService("ReplicatedStorage").GameData.LatestRoom.Changed:Connect(function()
+	local room = workspace.CurrentRooms[game:GetService("ReplicatedStorage").GameData.LatestRoom.Value]
+	if room:FindFirstChild("Assets") then
+		local paintings = {}
+		for i,painting in next,room:FindFirstChild("Assets"):GetChildren() do
+			if painting.Name:find("Painting") then
+				table.insert(paintings,painting)
+			end
+		end
+		if #paintings > 0 then
+			local currentpainting
+			if paintings[#paintings] then
+				painters = painters + 1
+				currentpainting = paintings[#paintings]
+			else
+				currentpainting = paintings[1]
+			end
+			if currentpainting then
+				if currentpainting:FindFirstChild("Canvas") then
+					local selected = paints[math.random(1,#paints)]
+					if currentpainting:FindFirstChild("InteractPrompt") then
+						local cloning = currentpainting:FindFirstChild("InteractPrompt"):Clone()
+                        cloning.Name = "fakeInteract"
+						cloning.Parent = currentpainting
+						currentpainting:FindFirstChild("InteractPrompt"):Destroy()
+						local t = cloning.Triggered:Connect(function()
+							require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption(string.gsub("This painting is titled \"NAMEOFTHING\"","NAMEOFTHING",selected[2]), true)
+						end)
+					end
+					currentpainting:FindFirstChild("Canvas"):FindFirstChildOfClass("SurfaceGui"):FindFirstChildOfClass("ImageLabel").Image = selected[1]
+				end
+			end
+		end
+	end
+end)
+end)()
+
+-- Guiding light turn to Revealing light
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Revealing%20light"))()
+
+AntiDoorOpener:Disconnect()
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+
+-- Pusher
+coroutine.wrap(function()
+    while true do
+        wait(80)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Pusher"))()
+    end
+end)()
+
+-- Destructioner
+coroutine.wrap(function()
+    while true do
+        wait(180)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Destructioner"))()
+    end
+end)()
+
+-- Subspace Tripmine
+coroutine.wrap(function()
+    while true do
+        wait(55)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Subspace%20Tripmine"))()
+    end
+end)()
+
+-- Double Subspace Tripmine
+coroutine.wrap(function()
+    while true do
+        wait(135)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Double%20Subspace%20Tripmine"))()
+    end
+end)()
+
+-- Triple Subspace Tripmine
+coroutine.wrap(function()
+    while true do
+        wait(330)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Triple%20Subspace%20Tripmine"))()
+    end
+end)()
+
+-- In-Overseer
+coroutine.wrap(function()
+    while true do
+        wait(290)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/In-Overseer"))()
+    end
+end)()
+
+-- Extractioner
+coroutine.wrap(function()
+    while true do
+        wait(330)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Extractioner"))()
+    end
+end)()
