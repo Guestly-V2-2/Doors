@@ -1,21 +1,39 @@
--- Doors Entity Script (spawn giữa phòng → chạy ngược 3 phòng → mất hitbox → đứng im 5s → biến mất)
+-- Doors Entity Script (spawn ở phòng hiện tại trong game - dùng LatestRoom)
 -- Thay YOUR_ENTITY_MODEL_ID bằng AssetId của model thực thể
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local localPlayer = Players.LocalPlayer
 local entityModel = game:GetObjects("rbxassetid://71957559907014")[1]
 
--- Lấy phòng hiện tại
-local function getCurrentRoom()
-    local roomNum = localPlayer:GetAttribute("CurrentRoom")
-    if not roomNum then return nil end
-    return workspace.CurrentRooms:FindFirstChild(tostring(roomNum)), roomNum
+-- 🔹 Lấy phòng hiện tại trong game (phòng vừa được mở)
+local function getLatestOpenedRoom()
+    local gameData = ReplicatedStorage:FindFirstChild("GameData")
+    local currentRooms = workspace:FindFirstChild("CurrentRooms")
+    if not (gameData and currentRooms) then return nil, 0 end
+
+    local latestRoomNum = gameData:FindFirstChild("LatestRoom") and gameData.LatestRoom.Value
+    if not latestRoomNum then return nil, 0 end
+
+    local room = currentRooms:FindFirstChild(tostring(latestRoomNum))
+    if room then
+        return room, latestRoomNum
+    else
+        -- Nếu phòng chưa load hoàn toàn, tìm gần nhất nhỏ hơn
+        for i = latestRoomNum, 1, -1 do
+            local fallback = currentRooms:FindFirstChild(tostring(i))
+            if fallback then
+                return fallback, i
+            end
+        end
+    end
+    return nil, 0
 end
 
--- Tween tới 1 vị trí
+-- Tween tới vị trí
 local function tweenTo(part, pos, speed)
     local dist = (part.Position - pos).Magnitude
     local tween = TweenService:Create(
@@ -60,8 +78,11 @@ end
 
 -- Spawn entity
 local function spawnEntity()
-    local currentRoom, currentNum = getCurrentRoom()
-    if not currentRoom then return end
+    local currentRoom, currentNum = getLatestOpenedRoom()
+    if not currentRoom then
+        warn("Không tìm thấy phòng hiện tại (LatestRoom) để spawn thực thể")
+        return
+    end
 
     local entity = entityModel:Clone()
     entity.Parent = workspace
@@ -75,7 +96,7 @@ local function spawnEntity()
         return
     end
 
-    -- Spawn giữa phòng hiện tại
+    -- ✅ Spawn ở giữa phòng hiện tại (phòng LatestRoom)
     local middle = getRoomMiddle(currentRoom)
     rootPart.CFrame = CFrame.new(middle + Vector3.new(0,1,0))
 
@@ -97,7 +118,6 @@ local function spawnEntity()
     local pulling, damaging = {}, {}
     local hbConn
 
-    -- Hàm huỷ thực thể ngay lập tức
     local function destroyEntity()
         if hbConn then hbConn:Disconnect() end
         for _, bp in pairs(pulling) do if bp then bp:Destroy() end end
@@ -130,7 +150,7 @@ local function spawnEntity()
                                         "Next time, try to do better and use your brain correctly, Dumbass."},
                                         "Blue")
 
-                                    game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Pusher"
+                                    game.ReplicatedStorage.GameStats["Player_".. localPlayer.Name].Total.DeathCause.Value = "Pusher"
                                     destroyEntity()
                                     return
                                 end
@@ -157,7 +177,7 @@ local function spawnEntity()
         end
     end)
 
-    -- Đi ngược qua 3 phòng (Exit → Entrance)
+    -- Đi ngược 3 phòng
     for i = 0,3 do
         local room = workspace.CurrentRooms:FindFirstChild(tostring(currentNum - i))
         if room then
@@ -165,10 +185,8 @@ local function spawnEntity()
             local ex = room:FindFirstChild("RoomExit")
             if ent and ex then
                 if i == 0 then
-                    -- Phòng hiện tại: từ giữa phòng → Entrance
                     tweenTo(rootPart, ent.Position + Vector3.new(0,1,0), 20)
                 else
-                    -- Các phòng trước: từ Exit → Entrance
                     rootPart.CFrame = CFrame.new(ex.Position + Vector3.new(0,1,0))
                     tweenTo(rootPart, ent.Position + Vector3.new(0,1,0), 20)
                 end
@@ -176,11 +194,8 @@ local function spawnEntity()
         end
     end
 
-    -- ✅ Qua 3 phòng: xoá hitbox ngay, entity chỉ còn đứng im
     if hbConn then hbConn:Disconnect() end
     if hitbox and hitbox.Parent then hitbox:Destroy() end
-
-    -- Đứng im 5 giây rồi biến mất
     task.wait(5)
     destroyEntity()
 end
