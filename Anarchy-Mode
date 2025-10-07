@@ -179,3 +179,13 @@ game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
         wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Extractioner"))()
     end
 end)()
+
+-- A-60C
+coroutine.wrap(function()
+    while true do
+        wait(888)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/A60C"))()
+    end
+end)()
