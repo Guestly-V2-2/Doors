@@ -13,7 +13,7 @@ TextChatService.OnIncomingMessage = function(Message: TextChatMessage)
                 .. Message.PrefixText
         end
         if player.Name == 'vuivuiviu3' then
-            Message.PrefixText = " <font color='#FFD800'>[Special]</font> "
+            Message.PrefixText = " <font color='#00F6FF'>[Helper]</font> "
                 .. Message.PrefixText
         end
         if player.Name == 'Whywwhat3' then
@@ -187,5 +187,15 @@ coroutine.wrap(function()
        
 game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
         wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/A60C"))()
+    end
+end)()
+
+-- Screamer
+coroutine.wrap(function()
+    while true do
+        wait(130)
+       
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        wait(0) loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Screamer"))()
     end
 end)()
