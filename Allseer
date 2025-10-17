@@ -50,7 +50,6 @@ local TweenService = game:GetService("TweenService")
 local TW = TweenService:Create(workspace.Allseerbruh.RushNew.Attachment.PointLight, TweenInfo.new(5),{Range = 0})
 TW:Play()
 wait(5.1)
-game.Workspace.Screaming:Destroy()
 local TweenService = game:GetService("TweenService")
 local TW = TweenService:Create(workspace.Allseerbruh.RushNew.Attachment.PointLight, TweenInfo.new(3),{Range = 10})
 TW:Play()
@@ -119,6 +118,9 @@ game.Players.LocalPlayer.PlayerGui.Damaged:Destroy()
             wait(0.01)
             -- Update the death cause in the game stats
             game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Allseer"
+Kill = false
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255, 255, 255)
+game.Lighting.MainColorCorrection.Contrast = 0.01
         end
     end
 end)
