@@ -47,10 +47,10 @@ end
 
 CustomGitSound("https://github.com/Doors-Guest-Scripts/Tutorial/raw/refs/heads/main/XRecorder_Edited_20250902_02.mp3?raw=true", 1, " SucK1")
 
-require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('Anarchy Mode Actived!',true)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('Cizinuness Mode Actived!',true)
 wait(2)
 game.Workspace.SucK:Destroy()
-require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('All credits to Guestly and Vuivuiviu2',true)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('All credits to Guestly',true)
 
 -- Paintings Images Changer
 coroutine.wrap(function()
