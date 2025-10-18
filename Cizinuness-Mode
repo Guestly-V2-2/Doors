@@ -51,6 +51,8 @@ require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('
 wait(2)
 game.Workspace.SucK:Destroy()
 require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('All credits to Guestly',true)
+wait(2)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption('Big credits to TheLastOne for the oxygen bar and the note scripts',true)
 
 -- Paintings Images Changer
 coroutine.wrap(function()
@@ -105,6 +107,12 @@ end)()
 
 -- Guiding light turn to Revealing light
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Revealing%20light"))()
+
+-- Note
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Random-Stuffs/refs/heads/main/Note"))()
+
+-- Oxygen Bar
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Random-Stuffs/refs/heads/main/OxygenBar"))()
 
 AntiDoorOpener:Disconnect()
 
