@@ -1,0 +1,480 @@
+local ENTITY_ID = 88912878653519      -- <-- Thay bằng id model của bạn
+local RISE_TIME = 3              -- thời gian trồi lên (giây)
+local SPAWN_DEPTH = 6            -- spawn dưới mặt đất bao nhiêu studs
+local MAX_ROOM_SEARCH_DISTANCE = 150
+local HITBOX_SIZE = 20           -- hitbox entity
+local SHAKE_MAX_OFFSET = 2       -- khoảng cách rung cực đại (studs)
+local SHAKE_DISTANCE = 20        -- khoảng cách tối đa để rung mạnh
+
+-- ====== SERVICES ======
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+if not player then return end
+
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart",5)
+if not hrp then return end
+
+-- ====== TÌM PHÒNG ======
+local rooms = {}
+for _, m in pairs(workspace:GetDescendants()) do
+    if m:IsA("Model") and m:FindFirstChild("RoomEntrance") and m:FindFirstChild("RoomExit") then
+        table.insert(rooms, m)
+    end
+end
+
+if #rooms == 0 then warn("Không tìm thấy phòng nào"); return end
+
+local function midpoint(a,b) return (a.Position + b.Position)/2 end
+local chosenRoom
+local bestDist = math.huge
+for _, room in ipairs(rooms) do
+    local ent = room:FindFirstChild("RoomEntrance")
+    local ex = room:FindFirstChild("RoomExit")
+    if ent:IsA("BasePart") and ex:IsA("BasePart") then
+        local mid = midpoint(ent, ex)
+        local d = (hrp.Position - mid).Magnitude
+        if d < bestDist and d <= MAX_ROOM_SEARCH_DISTANCE then
+            bestDist = d
+            chosenRoom = room
+        end
+    end
+end
+if not chosenRoom then warn("Không tìm thấy phòng phù hợp gần người chơi"); return end
+
+local entrance = chosenRoom:FindFirstChild("RoomEntrance")
+local exitpart = chosenRoom:FindFirstChild("RoomExit")
+local spawnPos = midpoint(entrance, exitpart)
+
+-- ====== LOAD ENTITY ======
+local success, asset = pcall(function()
+    return game:GetObjects("rbxassetid://" .. tostring(ENTITY_ID))
+end)
+if not success or #asset == 0 then warn("Không load được entity"); return end
+
+local model = asset[1]
+if model:IsA("Model")==false then
+    for _, v in ipairs(model:GetChildren()) do
+        if v:IsA("Model") then model = v; break end
+    end
+end
+
+model.Parent = workspace
+
+-- Đảm bảo model có PrimaryPart
+local function setAnyPrimary(m)
+    if m.PrimaryPart then return true end
+    for _, v in ipairs(m:GetDescendants()) do
+        if v:IsA("BasePart") then
+            m.PrimaryPart = v
+            return true
+        end
+    end
+    return false
+end
+if not setAnyPrimary(model) then model:Destroy(); warn("Model không có BasePart"); return end
+
+-- ====== SPAWN DƯỚI MẶT ĐẤT ======
+local startCFrame = CFrame.new(spawnPos - Vector3.new(0, SPAWN_DEPTH, 0))
+model:SetPrimaryPartCFrame(startCFrame)
+
+local targetCFrame = CFrame.new(spawnPos)
+local tween = TweenService:Create(model.PrimaryPart, TweenInfo.new(RISE_TIME,Enum.EasingStyle.Quad,Enum.EasingDirection.Out), {CFrame = targetCFrame})
+tween:Play()
+
+-- ====== HITBOX ======
+local hitbox = Instance.new("Part")
+hitbox.Size = Vector3.new(HITBOX_SIZE,HITBOX_SIZE,HITBOX_SIZE)
+hitbox.Name = "Hitbox"
+hitbox.Transparency = 1
+hitbox.Anchored = true
+hitbox.CanCollide = false
+hitbox.CFrame = model.PrimaryPart.CFrame
+hitbox.Parent = workspace
+
+-- Khi player chạm hitbox = chết
+hitbox.Touched:Connect(function(other)
+    local h = other.Parent:FindFirstChild("Humanoid")
+    if h then
+        h.Health = 0
+
+firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+                                        {"You died to who called.. Spliter","You touched it..",
+                                        "It's dangerous..","Be careful next time.",
+                                        "Maybe you will get lucky."},
+                                        "Blue")
+
+                                    game.ReplicatedStorage.GameStats["Player_"..
+game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Spliter"
+    end
+end)
+
+-- ====== RUNG THEO KHOẢNG CÁCH ======
+RunService.RenderStepped:Connect(function()
+    local distance = (hrp.Position - model.PrimaryPart.Position).Magnitude
+    local intensity = math.clamp(1 - distance/SHAKE_DISTANCE, 0, 1) * SHAKE_MAX_OFFSET
+    local offset = Vector3.new(
+        math.random()*intensity*2 - intensity,
+        math.random()*intensity*2 - intensity,
+        math.random()*intensity*2 - intensity
+    )
+    model:SetPrimaryPartCFrame(targetCFrame + offset)
+    hitbox.CFrame = model.PrimaryPart.CFrame
+end)
+
+wait(5)
+game.Workspace.Spliter:Destroy()
+game.Workspace.Hitbox:Destroy()
+
+-- Split-1
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
+
+local MODEL_ID = "97321639009420" -- thay bằng model id entity
+local ENTITY_HEIGHT_OFFSET = 1
+local MIN_TWEEN_TIME = 2
+local MAX_TWEEN_TIME = 4
+
+local entityModel
+local hitbox
+local stopMoving = false
+
+-- 📌 Lấy trung tâm phòng
+local function getRoomCenterAndSize(room)
+    local cf, size = room:GetBoundingBox()
+    return cf, size
+end
+
+-- 📌 Spawn entity
+local function SpawnEntity()
+    local latest = ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("LatestRoom")
+    if not latest then return end
+    
+    -- ⚡ Lấy phòng hiện tại
+    local room = Workspace.CurrentRooms:FindFirstChild(tostring(latest.Value))
+    if not room then return end
+
+    local centerCFrame, roomSize = getRoomCenterAndSize(room)
+    if not centerCFrame then return end
+
+    -- ⚡ Lấy RoomEntrance và RoomExit
+    local entrance = room:FindFirstChild("RoomEntrance")
+    local exit = room:FindFirstChild("RoomExit")
+    if not (entrance and exit and entrance:IsA("BasePart") and exit:IsA("BasePart")) then
+        warn("⚠️ RoomEntrance hoặc RoomExit không tồn tại ở room "..tostring(latest.Value))
+        return
+    end
+
+    -- Trung điểm giữa entrance và exit
+    local midPos = (entrance.Position + exit.Position) / 2
+    local spawnPos = midPos + Vector3.new(0, ENTITY_HEIGHT_OFFSET, 0)
+
+    -- Load model
+    local model = game:GetObjects("rbxassetid://"..MODEL_ID)[1]
+    model.Parent = Workspace
+    entityModel = model
+
+    if not model.PrimaryPart then
+        for _, part in ipairs(model:GetDescendants()) do
+            if part:IsA("BasePart") then
+                model.PrimaryPart = part
+                break
+            end
+        end
+    end
+    if not model.PrimaryPart then
+        warn("⚠️ Model không có PrimaryPart")
+        return
+    end
+
+    model:SetPrimaryPartCFrame(CFrame.new(spawnPos))
+
+    -- Hitbox
+    hitbox = Instance.new("Part")
+    hitbox.Size = Vector3.new(15, 15, 15)
+    hitbox.Transparency = 1
+    hitbox.Anchored = true
+    hitbox.CanCollide = false
+    hitbox.Parent = model
+
+    RunService.Heartbeat:Connect(function()
+        if model.PrimaryPart then
+            hitbox.CFrame = model.PrimaryPart.CFrame
+        end
+    end)
+
+    -- Khi chạm: -5 máu + knockback + hook chết
+    local touchedDebounces = {}
+    hitbox.Touched:Connect(function(part)
+        local character = part:FindFirstAncestorOfClass("Model")
+        if not character then return end
+        local humanoid = character:FindFirstChild("Humanoid")
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if not humanoid or not root then return end
+        if touchedDebounces[character] then return end
+        touchedDebounces[character] = true
+
+        -- Đánh dấu chết bởi entity này
+        local tag = humanoid:FindFirstChild("KilledByEntity")
+        if not tag then
+            tag = Instance.new("BoolValue")
+            tag.Name = "KilledByEntity"
+            tag.Value = true
+            tag.Parent = humanoid
+        end
+
+        -- Gây damage
+        humanoid:TakeDamage(5)
+
+        -- Knockback
+        local dir = (root.Position - model.PrimaryPart.Position)
+        if dir.Magnitude == 0 then dir = Vector3.new(0, 0, 1) end
+        local bv = Instance.new("BodyVelocity")
+        bv.Velocity = dir.Unit * 50
+        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bv.Parent = root
+        Debris:AddItem(bv, 0.15)
+
+        task.delay(0.25, function() touchedDebounces[character] = nil end)
+
+        -- Hook chết (chỉ gắn 1 lần cho mỗi humanoid)
+        if not humanoid:FindFirstChild("DeathHooked") then
+            local marker = Instance.new("BoolValue")
+            marker.Name = "DeathHooked"
+            marker.Parent = humanoid
+
+            humanoid.Died:Connect(function()
+                if humanoid:FindFirstChild("KilledByEntity") then
+                    
+                    warn("Player đã chết bởi thực thể!")
+                    -- Ví dụ:
+                    firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"You died to one of the Spliter's parts","It called Split-1","It's blind but it can track your location by your footsteps","Try to avoid it when it's trying to attack you","I trust you."},"Blue")
+
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Split-1"
+                end
+            end)
+        end
+    end)
+
+    -- Xoá khi qua cửa tiếp theo
+    latest:GetPropertyChangedSignal("Value"):Connect(function()
+        if entityModel and entityModel.Parent then
+            entityModel:Destroy()
+            stopMoving = true
+        end
+    end)
+
+    -- Di chuyển sau 3s
+    task.delay(3, function()
+        while model.Parent and not stopMoving do
+            local halfX, halfZ = roomSize.X/2 - 3, roomSize.Z/2 - 3
+            local rx = (math.random() * 2 - 1) * halfX
+            local rz = (math.random() * 2 - 1) * halfZ
+            local targetPos = Vector3.new(centerCFrame.Position.X + rx, spawnPos.Y, centerCFrame.Position.Z + rz)
+
+            -- thỉnh thoảng đuổi player
+            if math.random() < 0.3 then
+                local player = Players.LocalPlayer
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local root = player.Character.HumanoidRootPart
+                    targetPos = Vector3.new(root.Position.X, spawnPos.Y, root.Position.Z)
+                end
+            end
+
+            local tweenTime = math.random(MIN_TWEEN_TIME, MAX_TWEEN_TIME)
+            local tween = TweenService:Create(
+                model.PrimaryPart,
+                TweenInfo.new(tweenTime, Enum.EasingStyle.Linear),
+                {CFrame = CFrame.new(targetPos)}
+            )
+            tween:Play()
+            tween.Completed:Wait()
+
+            task.wait(0.2)
+        end
+    end)
+end
+
+SpawnEntity()
+
+-- Split-2
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
+
+local MODEL_ID = "85672013993837" -- thay bằng model id entity
+local ENTITY_HEIGHT_OFFSET = 1
+local MIN_TWEEN_TIME = 2
+local MAX_TWEEN_TIME = 4
+
+local entityModel
+local hitbox
+local stopMoving = false
+
+-- 📌 Lấy trung tâm phòng
+local function getRoomCenterAndSize(room)
+    local cf, size = room:GetBoundingBox()
+    return cf, size
+end
+
+-- 📌 Spawn entity
+local function SpawnEntity()
+    local latest = ReplicatedStorage:FindFirstChild("GameData") and ReplicatedStorage.GameData:FindFirstChild("LatestRoom")
+    if not latest then return end
+    
+    -- ⚡ Lấy phòng hiện tại
+    local room = Workspace.CurrentRooms:FindFirstChild(tostring(latest.Value))
+    if not room then return end
+
+    local centerCFrame, roomSize = getRoomCenterAndSize(room)
+    if not centerCFrame then return end
+
+    -- ⚡ Lấy RoomEntrance và RoomExit
+    local entrance = room:FindFirstChild("RoomEntrance")
+    local exit = room:FindFirstChild("RoomExit")
+    if not (entrance and exit and entrance:IsA("BasePart") and exit:IsA("BasePart")) then
+        warn("⚠️ RoomEntrance hoặc RoomExit không tồn tại ở room "..tostring(latest.Value))
+        return
+    end
+
+    -- Trung điểm giữa entrance và exit
+    local midPos = (entrance.Position + exit.Position) / 2
+    local spawnPos = midPos + Vector3.new(0, ENTITY_HEIGHT_OFFSET, 0)
+
+    -- Load model
+    local model = game:GetObjects("rbxassetid://"..MODEL_ID)[1]
+    model.Parent = Workspace
+    entityModel = model
+
+    if not model.PrimaryPart then
+        for _, part in ipairs(model:GetDescendants()) do
+            if part:IsA("BasePart") then
+                model.PrimaryPart = part
+                break
+            end
+        end
+    end
+    if not model.PrimaryPart then
+        warn("⚠️ Model không có PrimaryPart")
+        return
+    end
+
+    model:SetPrimaryPartCFrame(CFrame.new(spawnPos))
+
+    -- Hitbox
+    hitbox = Instance.new("Part")
+    hitbox.Size = Vector3.new(15, 15, 15)
+    hitbox.Transparency = 1
+    hitbox.Anchored = true
+    hitbox.CanCollide = false
+    hitbox.Parent = model
+
+    RunService.Heartbeat:Connect(function()
+        if model.PrimaryPart then
+            hitbox.CFrame = model.PrimaryPart.CFrame
+        end
+    end)
+
+    -- Khi chạm: -5 máu + knockback + hook chết
+    local touchedDebounces = {}
+    hitbox.Touched:Connect(function(part)
+        local character = part:FindFirstAncestorOfClass("Model")
+        if not character then return end
+        local humanoid = character:FindFirstChild("Humanoid")
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if not humanoid or not root then return end
+        if touchedDebounces[character] then return end
+        touchedDebounces[character] = true
+
+        -- Đánh dấu chết bởi entity này
+        local tag = humanoid:FindFirstChild("KilledByEntity")
+        if not tag then
+            tag = Instance.new("BoolValue")
+            tag.Name = "KilledByEntity"
+            tag.Value = true
+            tag.Parent = humanoid
+        end
+
+        -- Gây damage
+        humanoid:TakeDamage(10)
+
+        -- Knockback
+        local dir = (root.Position - model.PrimaryPart.Position)
+        if dir.Magnitude == 0 then dir = Vector3.new(0, 0, 1) end
+        local bv = Instance.new("BodyVelocity")
+        bv.Velocity = dir.Unit * 50
+        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bv.Parent = root
+        Debris:AddItem(bv, 0.15)
+
+        task.delay(0.25, function() touchedDebounces[character] = nil end)
+
+        -- Hook chết (chỉ gắn 1 lần cho mỗi humanoid)
+        if not humanoid:FindFirstChild("DeathHooked") then
+            local marker = Instance.new("BoolValue")
+            marker.Name = "DeathHooked"
+            marker.Parent = humanoid
+
+            humanoid.Died:Connect(function()
+                if humanoid:FindFirstChild("KilledByEntity") then
+                    
+                    warn("Player đã chết bởi thực thể!")
+                    -- Ví dụ:
+                    firesignal(game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent, {"You died to one of the Spliter's parts","It called Split-2","Same as Split-1, but it doesn't have eyes","That's why it cant see","Its very easy to avoid it, so i know you can do better next time!"},"Blue")
+
+game.ReplicatedStorage.GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Split-2"
+                end
+            end)
+        end
+    end)
+
+    -- Xoá khi qua cửa tiếp theo
+    latest:GetPropertyChangedSignal("Value"):Connect(function()
+        if entityModel and entityModel.Parent then
+            entityModel:Destroy()
+            stopMoving = true
+        end
+    end)
+
+    -- Di chuyển sau 3s
+    task.delay(3, function()
+        while model.Parent and not stopMoving do
+            local halfX, halfZ = roomSize.X/2 - 3, roomSize.Z/2 - 3
+            local rx = (math.random() * 2 - 1) * halfX
+            local rz = (math.random() * 2 - 1) * halfZ
+            local targetPos = Vector3.new(centerCFrame.Position.X + rx, spawnPos.Y, centerCFrame.Position.Z + rz)
+
+            -- thỉnh thoảng đuổi player
+            if math.random() < 0.3 then
+                local player = Players.LocalPlayer
+                if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local root = player.Character.HumanoidRootPart
+                    targetPos = Vector3.new(root.Position.X, spawnPos.Y, root.Position.Z)
+                end
+            end
+
+            local tweenTime = math.random(MIN_TWEEN_TIME, MAX_TWEEN_TIME)
+            local tween = TweenService:Create(
+                model.PrimaryPart,
+                TweenInfo.new(tweenTime, Enum.EasingStyle.Linear),
+                {CFrame = CFrame.new(targetPos)}
+            )
+            tween:Play()
+            tween.Completed:Wait()
+
+            task.wait(0.2)
+        end
+    end)
+end
+
+SpawnEntity()
