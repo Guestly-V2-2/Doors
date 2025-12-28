@@ -1,0 +1,232 @@
+local SlashTime = 12
+local SlashBool = false
+if workspace:GetAttribute("ServerType") == "VIP" then
+    local cooldown = game:GetService("Players").LocalPlayer.PlayerGui.MainUI.ModScreen.ModContainer.Contents:GetChildren()[9].Title
+    spawn(function() 
+        while wait(0.1) do 
+            if cooldown.Text == "Disable Ability Cooldowns (Currently: true)" then
+                SlashTime = 0
+                SlashBool = false
+            else
+                SlashTime = 12
+            end
+        end
+    end) 
+end
+local Con = require(game:GetService("ReplicatedStorage").Assets.Killers.Slasher.Config)
+
+    Con.Animations.Idle = "rbxassetid://94895464960972"
+    Con.Animations.Run = "rbxassetid://138660433982140"
+    Con.Animations.Slash = "rbxassetid://109667959938617"
+    Con.Animations.Behead = "rbxassetid://126681776859538"
+    Con.Animations.GashingWoundStart = "rbxassetid://129976080405072"
+    Con.Animations.EnragedStart = "rbxassetid://126217710453897"
+    Con.Animations.EnragedIdle = "rbxassetid://104662930162069"
+    Con.Animations.EnragedWalk = "rbxassetid://83443750361806"
+    Con.Animations.EnragedRun = "rbxassetid://83443750361806"
+
+local Player = game:GetService("Players").LocalPlayer
+local P = Player.Character
+game.StarterGui:SetCore("SendNotification", {Title = "PLEASE READ THIS!", Text = "You have to execute the script twice before the round and after the round", Duration = 4,})
+if P.parent == workspace.Players.Killers and P.Name == "Slasher" then
+    game:GetService("ReplicatedStorage").Assets.Sounds.OST.eternalFight.SoundId = "105135449947797"
+    game:GetService("ReplicatedStorage").Assets.Sounds.OST.eternalFight.PlaybackSpeed = 1.1
+    P["Slasher Export"]:Destroy() 
+    P.Mask:Destroy() 
+    P.Machete:Destroy() 
+   P.Chainsaw:Destroy()
+   local light = Instance.new("PointLight", P.Torso)
+light.Color = Color3.fromRGB(255, 0, 0)
+light.Range =10
+light.Brightness = 5
+   local Face = Instance.new("Decal", workspace.Players.Killers.Slasher.Head)
+   Face.Name = "NoFace"
+   Face.Texture = "rbxassetid://18982667465"
+workspace.Players.Killers.Slasher.Head.Transparency = 0
+workspace.Players.Killers.Slasher.Torso.Transparency = 0
+workspace.Players.Killers.Slasher.Torso.Color = Color3.fromRGB(0, 0, 0)
+workspace.Players.Killers.Slasher["Left Arm"].Transparency = 0
+workspace.Players.Killers.Slasher["Left Arm"].Color = Color3.fromRGB(0, 0, 0)
+workspace.Players.Killers.Slasher["Right Arm"].Transparency = 0
+workspace.Players.Killers.Slasher["Right Arm"].Color = Color3.fromRGB(0, 0, 0)
+workspace.Players.Killers.Slasher["Right Leg"].Color = Color3.fromRGB(0, 0, 0)
+workspace.Players.Killers.Slasher["Right Leg"].Transparency = 0
+workspace.Players.Killers.Slasher["Left Leg"].Color = Color3.fromRGB(0, 0, 0)
+workspace.Players.Killers.Slasher["Left Leg"].Transparency = 0
+
+    local GashingWoundButton = game:GetService("Players").LocalPlayer.PlayerGui.MainUI.AbilityContainer.GashingWound
+
+    GashingWoundButton.MouseButton1Click:Connect(function() 
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GS"
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true
+
+local red = Instance.new("ImageLabel")
+red.Name = "GS"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1 -- Make the background fully transparent
+red.Image = "rbxassetid://136024837694162" -- Set the image using a random Image ID
+red.ImageTransparency = 1
+red.Parent = screenGui
+wait(0.1)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.GS.GS, TweenInfo.new(1),{ImageTransparency = 0})
+TW:Play()
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "GS"
+    sound.PlaybackSpeed = 1.1
+    sound.Volume = 3
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-Second-Account/Scripts/raw/refs/heads/main/YTSave.com_YouTube_Glitch-Sound-Effect_Media_7a5UMZ4kihM_004_360p.mp3?raw=true", 1, " GS")
+
+wait(3)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.GS.GS, TweenInfo.new(2),{ImageTransparency = 1})
+TW:Play()
+wait(2.1)
+workspace.GS:Destroy()
+game.Players.LocalPlayer.PlayerGui.GS:Destroy()
+end)
+
+local RagingPaceButton = game:GetService("Players").LocalPlayer.PlayerGui.MainUI.AbilityContainer.RagingPace
+
+    RagingPaceButton.MouseButton1Click:Connect(function() 
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RP"
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true
+
+local red = Instance.new("ImageLabel")
+red.Name = "RP"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1 -- Make the background fully transparent
+red.Image = "rbxassetid://80307162860677" -- Set the image using a random Image ID
+red.ImageTransparency = 1
+red.Parent = screenGui
+wait(0.1)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.RP.RP, TweenInfo.new(1),{ImageTransparency = 0})
+TW:Play()
+
+local Fire = Instance.new("Fire", workspace.Players.Killers.Slasher.Torso)
+Fire.Color = Color3.fromRGB(255, 0, 0)
+Fire.Heat = 25
+Fire.Size = 10
+local Sparkles = Instance.new("Sparkles", workspace.Players.Killers.Slasher.Torso)
+Sparkles.Color = Color3.fromRGB(255, 0, 0)
+Sparkles.TimeScale = 100
+workspace.Players.Killers.Slasher.Head.NoFace.Color3 = Color3.fromRGB(255, 0, 0)
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "RP"
+    sound.PlaybackSpeed = 1
+    sound.Volume = 5
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-Second-Account/Scripts/raw/refs/heads/main/YTSave.com_YouTube_Glitch-Sound-Effect-Speaker_Media_suaOrNdQcUg_002_720p.mp3?raw=true", 1, " RP")
+
+wait(3)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.RP.RP, TweenInfo.new(2),{ImageTransparency = 1})
+TW:Play()
+wait(2.1)
+workspace.RP:Destroy()
+game.Players.LocalPlayer.PlayerGui.RP:Destroy()
+wait(5)
+workspace.Players.Killers.Slasher.Head.NoFace.Color3 = Color3.fromRGB(255, 255, 255)
+workspace.Players.Killers.Slasher.Torso.Fire:Destroy()
+workspace.Players.Killers.Slasher.Torso.Sparkles:Destroy()
+end)
+
+local SlashButton = game:GetService("Players").LocalPlayer.PlayerGui.MainUI.AbilityContainer.Slash
+   
+ SlashButton.MouseButton1Click:Connect(function() 
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "SL"
+    sound.PlaybackSpeed = 1
+    sound.Volume = 2
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-Second-Account/Scripts/raw/refs/heads/main/XRecorder_Edited_20251227_01.mp3?raw=true", 1, " SL")
+
+wait(1.2)
+workspace.SL:Destroy()
+end)
+
+local BeheadButton = game:GetService("Players").LocalPlayer.PlayerGui.MainUI.AbilityContainer.Behead
+   
+ BeheadButton.MouseButton1Click:Connect(function() 
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "BH"
+    sound.PlaybackSpeed = 1
+    sound.Volume = 3
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-Second-Account/Scripts/raw/refs/heads/main/XRecorder_Edited_20251227_02.mp3?raw=true", 1, " BH")
+
+wait(2)
+workspace.BH:Destroy()
+end)
+    game.StarterGui:SetCore("SendNotification", {Title = "A-60's Scripts", Text = "The Slasher just turned into The Intruder!", Duration = 4,})
+end
