@@ -1,0 +1,187 @@
+local spawn = Instance.new("Sound")
+spawn.Name = "Spawn"
+spawn.Parent = game.Workspace
+spawn.Volume = 1
+spawn.SoundId = "rbxassetid://111176063830942"
+spawn:Play()
+
+-- ================= SERVICES =================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+-- ================= PLAYER =================
+local plr = Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+local hum = chr:WaitForChild("Humanoid")
+local hrp = chr:WaitForChild("HumanoidRootPart")
+
+-- ================= STATE =================
+local STATE = {
+	Active = true,
+	CanMove = false,
+	LastTouchTime = tick(),
+}
+
+-- ================= LOAD ENTITY =================
+local model = game:GetObjects("rbxassetid://118643153130171")[1]
+model.Parent = workspace
+model.Name = "Entity01"
+
+local entity = model:FindFirstChildWhichIsA("BasePart")
+entity.Anchored = true
+entity.CanCollide = false
+entity.CFrame = hrp.CFrame * CFrame.new(0, 0, 25)
+
+-- ================= EFFECT =================
+local cc = Instance.new("ColorCorrectionEffect")
+cc.Name = "GoofierRed"
+cc.Parent = Lighting
+cc.TintColor = Color3.fromRGB(255,255,255)
+cc.Contrast = 0
+
+-- ================= CONFIG =================
+local RED_MAX = 35
+local RED_MIN = 8
+
+local SHAKE_DISTANCE = 10
+local SHAKE_POWER_CAM = 0.12
+
+local DESPAWN_TIME = 30
+local START_DELAY = 3
+
+-- ================= START DELAY =================
+task.delay(START_DELAY, function()
+	if STATE.Active then
+		STATE.CanMove = true
+	end
+end)
+
+-- ================= MAIN LOOP =================
+local cam = workspace.CurrentCamera
+local connection
+
+connection = RunService.RenderStepped:Connect(function(dt)
+	if not STATE.Active or not entity or not entity.Parent then
+		connection:Disconnect()
+		return
+	end
+
+	local dist = (entity.Position - hrp.Position).Magnitude
+
+	-- ===== RED SCREEN =====
+	local alpha = math.clamp(
+		1 - ((dist - RED_MIN) / (RED_MAX - RED_MIN)),
+		0, 1
+	)
+
+	cc.TintColor = Color3.new(
+		1,
+		1 - alpha * 0.7,
+		1 - alpha * 0.7
+	)
+	cc.Contrast = alpha * 0.2
+
+	-- ===== CAMERA SHAKE =====
+	if dist <= SHAKE_DISTANCE then
+		local i = math.clamp(1 - (dist / SHAKE_DISTANCE), 0, 1)
+		cam.CFrame = cam.CFrame * CFrame.new(
+			(math.random()-0.5) * SHAKE_POWER_CAM * i,
+			(math.random()-0.5) * SHAKE_POWER_CAM * i,
+			0
+		)
+	end
+
+	-- ===== HIDE CHECK =====
+	if chr:GetAttribute("Hiding") then
+		return
+	end
+
+	-- ===== MOVE =====
+	if STATE.CanMove then
+		local speed = hum.WalkSpeed
+		local dir = (hrp.Position - entity.Position)
+		if dir.Magnitude > 1 then
+			entity.CFrame += dir.Unit * speed * dt
+		end
+	end
+
+	-- ===== TOUCH (HOOK JUMPSCARE) =====
+	if dist <= 2.5 then
+		STATE.Active = false
+		model:Destroy()
+
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
+		task.wait(3)
+
+		-- ================= JUMPSCARE =================
+		local PlayerGui = plr:WaitForChild("PlayerGui")
+
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "JumpScareGui"
+		gui.IgnoreGuiInset = true
+		gui.ResetOnSpawn = false
+		gui.Parent = PlayerGui
+
+		local img = Instance.new("ImageLabel")
+		img.Parent = gui
+		img.AnchorPoint = Vector2.new(0.5, 0.5)
+		img.Position = UDim2.fromScale(0.5, 0.5)
+		img.Size = UDim2.fromScale(1, 1)
+		img.BackgroundTransparency = 1
+		img.Image = "rbxassetid://104647389465726" -- bạn tự đổi
+		img.ScaleType = Enum.ScaleType.Fit
+		img.SizeConstraint = Enum.SizeConstraint.RelativeYY
+
+		local sound = Instance.new("Sound")
+		sound.Parent = gui
+		sound.SoundId = "rbxassetid://313948389" -- bạn tự đổi
+		sound.Volume = 1
+		sound:Play()
+
+		local SHAKE_POWER_UI = 6
+		local startTime = tick()
+
+		local uiConn
+		uiConn = RunService.RenderStepped:Connect(function()
+			if tick() - startTime >= 7 then
+				uiConn:Disconnect()
+				gui:Destroy()
+				sound:Destroy()
+				game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255,255,255)
+
+				hum:TakeDamage(100)
+
+				if hum.Health <= 0 then
+					firesignal(
+						game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+						{
+							"- .... . / ..-. . .- .-. -. . ... ... / -.. .. -.. / -. --- - / . -. -.. / -.-- . -",
+							". ...- . .-. -.-- - .... .. -. --. / .- .-. --- ..- -. -.. / -.-- --- ..- / .. ... / -. --- .-. -- .- .-..",
+							"-.-- --- ..- / .-- --- -. .----. - / . ... -.-. .- .--. . / - .... . / -.. .- .-. -.- -. . ... ... .-.-.-"
+						},
+						"Blue"
+					)
+
+					game:GetService("ReplicatedStorage").GameStats[
+						"Player_"..plr.Name
+					].Total.DeathCause.Value = "UNKNOWN"
+				end
+				return
+			end
+
+			local ox = math.random(-SHAKE_POWER_UI, SHAKE_POWER_UI)
+			local oy = math.random(-SHAKE_POWER_UI, SHAKE_POWER_UI)
+			img.Position = UDim2.fromScale(0.5, 0.5) + UDim2.fromOffset(ox, oy)
+		end)
+	end
+end)
+
+-- ================= CLEANUP =================
+model.Destroying:Connect(function()
+	STATE.Active = false
+	if cc then cc:Destroy() end
+end)
+
+wait(3)
+game.Workspace.Spawn:Destroy()
