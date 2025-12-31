@@ -110,6 +110,7 @@ connection = RunService.RenderStepped:Connect(function(dt)
 	if dist <= 2.5 then
 		STATE.Active = false
 		model:Destroy()
+        game.Workspace.Ambience:Destroy()
 
 game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(0, 0, 0)
 		task.wait(3)
