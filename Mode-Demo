@@ -1,0 +1,121 @@
+local sound = Instance.new("Sound")
+sound.Name = "Ambience"
+sound.Parent = game.Workspace
+sound.Looped = true
+sound.Volume = 1
+sound.SoundId = "rbxassetid://133838630142849"
+sound:Play()
+
+-- Darkness Light
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Random-Stuffs/refs/heads/main/Darknesslight"))()
+
+-- Sprint Bar
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsHubs/Doors-Hubs/refs/heads/main/Hardcore%20Sprint%20System%20(PC%20and%20Mobile%20Adaptation).lua.txt"))()
+
+-- DOORS - Remove All Lights (Client-side)
+-- Executor Script
+
+local Lighting = game:GetService("Lighting")
+
+-- 1. Tắt ánh sáng môi trường
+Lighting.Brightness = 0
+Lighting.GlobalShadows = true
+Lighting.Ambient = Color3.new(0,0,0)
+Lighting.OutdoorAmbient = Color3.new(0,0,0)
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+Lighting.ClockTime = 0
+
+-- 2. Hàm xóa / tắt mọi nguồn sáng
+local function removeLight(obj)
+    if obj:IsA("PointLight")
+    or obj:IsA("SpotLight")
+    or obj:IsA("SurfaceLight") then
+        obj.Enabled = false
+        obj:Destroy()
+    end
+
+    -- Lửa (lò sưởi, đuốc…)
+    if obj:IsA("Fire") then
+        obj.Enabled = false
+        obj:Destroy()
+    end
+
+    -- Hạt phát sáng
+    if obj:IsA("ParticleEmitter")
+    or obj:IsA("Smoke") then
+        obj.Enabled = false
+        obj:Destroy()
+    end
+
+    -- Part phát sáng (Neon)
+    if obj:IsA("BasePart") then
+        if obj.Material == Enum.Material.Neon then
+            obj.Material = Enum.Material.Plastic
+        end
+    end
+end
+
+-- 3. Quét toàn bộ map
+for _, v in pairs(workspace:GetDescendants()) do
+    pcall(function()
+        removeLight(v)
+    end)
+end
+
+-- 4. Ngăn đèn mới spawn sau này
+workspace.DescendantAdded:Connect(function(v)
+    task.wait()
+    pcall(function()
+        removeLight(v)
+    end)
+end)
+
+print(">> All lights removed successfully")
+
+local lighting = game:GetService("Lighting")
+local players = game:GetService("Players")
+local chatService = game:GetService("TextChatService")
+local rs = game:GetService("ReplicatedStorage")
+
+local player = players.LocalPlayer
+local channel = chatService.TextChannels:FindFirstChild("RBXGeneral")
+
+local mainGameModule = player.PlayerGui
+    :WaitForChild("MainUI", 10)
+    :WaitForChild("Initiator", 10)
+    :FindFirstChild("Main_Game")
+
+local function showCaptionAndChat(captionText, chatText)
+    if mainGameModule then
+        local success, mainGame = pcall(require, mainGameModule)
+        if success and mainGame and mainGame.caption then
+            mainGame.caption("<font color='#000000'>" .. captionText .. "</font>", true)
+        end
+    end
+    if channel then
+        channel:DisplaySystemMessage("<font color='#000000'>" .. chatText .. "</font>")
+    end
+end
+
+task.spawn(function()
+    showCaptionAndChat("Hallucination Mode Loaded Successfully", "Will you escape this, Hotel?")
+    task.wait(3)
+    showCaptionAndChat("Mode made by Celestian on Discord", "We are waiting for you.")
+    task.wait(3)
+    showCaptionAndChat("ðŸ‘", "Good luck.")
+end)
+
+lighting.FogColor = Color3.new(0, 0, 0)
+lighting.FogStart = 0
+lighting.FogEnd = 20
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+
+-- UNKNOWN
+coroutine.wrap(function()
+    while true do
+        wait(130)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/UNKNOWN"))()
+    end
+end)()
