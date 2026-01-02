@@ -1,0 +1,213 @@
+--// CONFIG
+local ROOM_WAIT_TIME = 30
+local SCRIPT_TRIGGER_TIME = 50
+local FADE_IN_DURATION = 5
+local FADE_OUT_DURATION = 3
+local IMAGE_ID = "rbxassetid://140357659610012" -- Thay bằng ID ảnh
+local SOUND_ID = "rbxassetid://135005391118577" -- Thay bằng ID sound
+local SHAKE_AMOUNT = 5
+local MAX_IMAGE_WIDTH = 0.8
+local MAX_IMAGE_HEIGHT = 0.8
+local ENV_FADE_DURATION = 20 -- thời gian fade môi trường đỏ
+
+local CUSTOM_SCRIPT = function()
+    print("Executing custom script hook!")
+   game.Workspace.Ambience:Destroy()
+   loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Random-Stuffs/refs/heads/main/Hallucination%20jump"))()
+    -- Gắn script phụ
+end
+
+local PLAYER_MOVE_RESET_DIST = 50 -- khoảng cách xác định rời phòng
+
+--// SERVICES
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+--// VARIABLES
+local roomStartTime = tick()
+local roomCenter = hrp.Position
+local imageGui, imageLabel, soundInstance
+local shaking = false
+local fadeActive = false
+local envTween -- tween môi trường đang chạy
+
+-- Tạo ColorCorrectionEffect nếu chưa có
+local colorEffect = Lighting:FindFirstChild("DoorsRedEffect")
+if not colorEffect then
+    colorEffect = Instance.new("ColorCorrectionEffect")
+    colorEffect.Name = "DoorsRedEffect"
+    colorEffect.Parent = Lighting
+    colorEffect.TintColor = Color3.new(1,1,1)
+    colorEffect.Enabled = false
+end
+
+-- Fade môi trường đỏ
+local function fadeEnvironment(toRed, duration)
+    if envTween then
+        envTween:Cancel() -- dừng tween trước
+        envTween = nil
+    end
+    colorEffect.Enabled = true
+    local startColor = colorEffect.TintColor
+    local endColor = toRed and Color3.fromRGB(200,50,50) or Color3.new(1,1,1)
+    local startTime = tick()
+
+    envTween = TweenService:Create(colorEffect, TweenInfo.new(duration), {TintColor = endColor})
+    envTween:Play()
+    envTween.Completed:Connect(function()
+        if not toRed then
+            colorEffect.Enabled = false
+        end
+        envTween = nil
+    end)
+end
+
+-- Tạo hình ảnh
+local function createImage()
+    if imageGui then return end
+    imageGui = Instance.new("ScreenGui")
+    imageGui.Name = "DoorsImageOverlay"
+    imageGui.ResetOnSpawn = false
+    imageGui.Parent = PlayerGui
+
+    imageLabel = Instance.new("ImageLabel")
+    imageLabel.Name = "OverlayImage"
+    imageLabel.Image = IMAGE_ID
+    imageLabel.BackgroundTransparency = 1
+    imageLabel.AnchorPoint = Vector2.new(0.5,0.5)
+    imageLabel.Position = UDim2.new(0.5,0,0.5,0)
+    imageLabel.Size = UDim2.new(MAX_IMAGE_WIDTH,0,MAX_IMAGE_HEIGHT,0)
+    imageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
+    imageLabel.ImageTransparency = 1
+    imageLabel.Parent = imageGui
+
+    -- Sound
+    soundInstance = Instance.new("Sound")
+    soundInstance.SoundId = SOUND_ID
+    soundInstance.Looped = false
+    soundInstance.Parent = imageGui
+    soundInstance:Play()
+
+    -- Fade in hình ảnh
+    fadeActive = true
+    TweenService:Create(imageLabel, TweenInfo.new(FADE_IN_DURATION), {ImageTransparency = 0}):Play()
+
+    -- Shake
+    shaking = true
+    spawn(function()
+        while shaking and imageLabel.Parent do
+            local offsetX = math.random(-SHAKE_AMOUNT, SHAKE_AMOUNT)
+            local offsetY = math.random(-SHAKE_AMOUNT, SHAKE_AMOUNT)
+            imageLabel.Position = UDim2.new(0.5, offsetX, 0.5, offsetY)
+            wait(0.05)
+        end
+        if imageLabel then
+            imageLabel.Position = UDim2.new(0.5,0,0.5,0)
+        end
+    end)
+
+    -- Fade môi trường đỏ dần
+    fadeEnvironment(true, ENV_FADE_DURATION)
+end
+
+-- Xóa ảnh fade out với tùy chọn fade môi trường
+local function removeImageCustom(duration, fadeEnvironmentFlag)
+    if not imageGui then return end
+    shaking = false
+    fadeActive = false
+
+    -- Môi trường
+    if fadeEnvironmentFlag then
+        fadeEnvironment(false, duration) -- fade môi trường
+    else
+        -- reset môi trường ngay lập tức
+        if envTween then
+            envTween:Cancel()
+            envTween = nil
+        end
+        colorEffect.TintColor = Color3.new(1,1,1)
+        colorEffect.Enabled = false
+    end
+
+    -- Hình ảnh
+    if imageLabel then
+        local fadeOut = TweenService:Create(imageLabel, TweenInfo.new(duration), {ImageTransparency = 1})
+        fadeOut:Play()
+        fadeOut.Completed:Connect(function()
+            if soundInstance then
+                soundInstance:Stop()
+                soundInstance:Destroy()
+            end
+            imageGui:Destroy()
+            imageGui, imageLabel, soundInstance = nil, nil, nil
+        end)
+    else
+        if soundInstance then
+            soundInstance:Stop()
+            soundInstance:Destroy()
+        end
+        imageGui:Destroy()
+        imageGui, imageLabel, soundInstance = nil, nil, nil
+    end
+end
+
+-- Xóa ảnh ngay lập tức, reset môi trường
+local function removeImageImmediate()
+    if not imageGui then return end
+    shaking = false
+    fadeActive = false
+
+    if envTween then
+        envTween:Cancel()
+        envTween = nil
+    end
+    colorEffect.TintColor = Color3.new(1,1,1)
+    colorEffect.Enabled = false
+
+    if soundInstance then
+        soundInstance:Stop()
+        soundInstance:Destroy()
+    end
+    imageGui:Destroy()
+    imageGui, imageLabel, soundInstance = nil, nil, nil
+end
+
+-- resetRoom() thủ công
+local function resetRoom()
+    roomStartTime = tick()
+    roomCenter = hrp.Position
+    removeImageImmediate()
+end
+
+-- Giám sát thời gian và vị trí phòng hiện tại
+spawn(function()
+    while true do
+        local elapsed = tick() - roomStartTime
+
+        -- Player bước sang phòng mới (>50 studs) → fade out hình ảnh 3s + fade môi trường
+        if (hrp.Position - roomCenter).Magnitude > PLAYER_MOVE_RESET_DIST then
+            roomStartTime = tick()
+            roomCenter = hrp.Position
+            removeImageCustom(FADE_OUT_DURATION, true)
+        end
+
+        -- 30s → fade in
+        if elapsed >= ROOM_WAIT_TIME and elapsed < SCRIPT_TRIGGER_TIME then
+            createImage()
+        -- 50s → xóa ngay + chạy script phụ, môi trường trở lại bình thường ngay
+        elseif elapsed >= SCRIPT_TRIGGER_TIME then
+            removeImageCustom(0, false) -- xóa ngay, môi trường bình thường ngay
+            CUSTOM_SCRIPT()
+            roomStartTime = tick()
+            roomCenter = hrp.Position
+        end
+
+        wait(0.1)
+    end
+end)
