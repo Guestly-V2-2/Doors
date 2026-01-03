@@ -1,0 +1,59 @@
+--// Download + load sound
+function GitAud(soundgit, filename)
+    if not writefile or not (getcustomasset or getsynasset) then
+        warn("Executor không hỗ trợ file system")
+        return nil
+    end
+
+    local FileName = filename .. ".mp3"
+    writefile(FileName, game:HttpGet(soundgit))
+    return (getcustomasset or getsynasset)(FileName)
+end
+
+--// Play custom sound
+function CustomGitSound(soundlink, vol, filename)
+    local asset = GitAud(soundlink, filename)
+    if not asset then return end
+
+    local sound = Instance.new("Sound")
+    sound.SoundId = asset
+    sound.Parent = workspace
+    sound.Name = "AmbientOfT2"
+    sound.Volume = vol or 1
+    sound:Play()
+end
+
+CustomGitSound(
+    "https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/YTSave.com_YouTube_CONCEPT-TOE1_Media_mXTYvRf3qew_002_720p.mp3",
+    1,
+    "TheRoastedOne"
+)
+
+local vm8 = true
+local executed = false -- 🔒 khóa chạy 1 lần
+
+task.wait(27)
+
+task.spawn(function()
+    while true do
+        task.wait(10)
+
+        if executed then
+            break -- thoát vòng lặp vĩnh viễn
+        end
+
+        local char = game.Players.LocalPlayer.Character
+        if char and char:GetAttribute("Crouching") == false and vm8 == true then
+            executed = true
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/Guestly-V2-2/Random-Stuffs/refs/heads/main/Toe1%20jumpscare"
+            ))()
+            break
+        end
+    end
+end)
+
+task.wait(7)
+if workspace:FindFirstChild("AmbientOfT2") then
+    workspace.AmbientOfT2:Destroy()
+end
