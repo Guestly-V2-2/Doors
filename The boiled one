@@ -1,0 +1,43 @@
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "AmbientOfTBO"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Doors-Guest-Scripts/Tutorial/raw/refs/heads/main/lv_0_20260103144502.mp3?raw=true", 1, " TheRoastedOne")
+
+local v6 = game.Players.LocalPlayer
+local vu7 = v6.Character or v6.CharacterAdded:Wait()
+local _ = workspace.CurrentCamera
+local vu8 = true
+game:GetService("TweenService")
+local v9 = game:GetObjects("rbxassetid://118643153130171")[1]
+v9.Parent = workspace
+v9.Name = "TheBoiledOne"
+v9.Head:GetChildren()[3].ParticleEmitter.Texture = "rbxassetid://131478715675612"
+workspace.TheBoiledOne.Head.Troll:Destroy()
+v9:FindFirstChildWhichIsA("BasePart").CFrame = workspace.CurrentRooms:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value):WaitForChild("RoomEntrance").CFrame * CFrame.new(math.random(- 5, 5), 0, - 15)
+wait(39)
+
+task.spawn(function()
+    while true do
+        repeat
+            wait(10000, 10000000)
+        until not vu7:GetAttribute("Hiding") and vu8 == true
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Random-Stuffs/refs/heads/main/TBO%20JUMPSCARE"))()
+    end
+end)
+
+wait(7)
+game.Workspace.TheBoiledOne:Destroy()
