@@ -25,7 +25,7 @@ local STATE = {
 }
 
 -- ================= LOAD ENTITY =================
-local model = game:GetObjects("rbxassetid://118643153130171")[1]
+local model = game:GetObjects("rbxassetid://123680002010344")[1]
 model.Parent = workspace
 model.Name = "Entity01"
 
