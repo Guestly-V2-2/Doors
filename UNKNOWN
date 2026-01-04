@@ -1,4 +1,4 @@
-game.Lighting.FogEnd = 0
+game.Lighting.FogEnd = 1000000
 local spawn = Instance.new("Sound")
 spawn.Name = "Spawn"
 spawn.Parent = game.Workspace
