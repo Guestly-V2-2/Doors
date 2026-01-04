@@ -1,3 +1,4 @@
+game.Lighting.FogEnd = 0
 local spawn = Instance.new("Sound")
 spawn.Name = "Spawn"
 spawn.Parent = game.Workspace
@@ -186,3 +187,5 @@ end)
 
 wait(3)
 game.Workspace.Spawn:Destroy()
+wait(30)
+game.Lighting.FogEnd = 30
