@@ -189,3 +189,4 @@ wait(3)
 game.Workspace.Spawn:Destroy()
 wait(30)
 game.Lighting.FogEnd = 30
+print("successfully spawned")
