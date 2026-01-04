@@ -1,0 +1,396 @@
+--// JUMPSCARE SCRIPT (IMAGE + DARK ENV | NO SOUND | WITH HOOK)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ===== CONFIG =====
+local IMAGE_ID = "rbxassetid://140575828191525"
+local JUMPSCARE_DURATION = 1 -- thời gian jumpscare (giây)
+-- ==================
+
+-- ===== SAVE ORIGINAL LIGHTING =====
+local originalLighting = {
+	Brightness = Lighting.Brightness,
+	Ambient = Lighting.Ambient,
+	OutdoorAmbient = Lighting.OutdoorAmbient,
+	FogEnd = Lighting.FogEnd,
+	FogStart = Lighting.FogStart,
+	FogColor = Lighting.FogColor,
+}
+
+local originalCC
+for _, v in ipairs(Lighting:GetChildren()) do
+	if v:IsA("ColorCorrectionEffect") then
+		originalCC = v:Clone()
+	end
+end
+
+-- ===== APPLY DARK ENVIRONMENT =====
+Lighting.Brightness = 0
+Lighting.Ambient = Color3.new(0, 0, 0)
+Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+Lighting.FogStart = 0
+Lighting.FogEnd = 50
+Lighting.FogColor = Color3.new(0, 0, 0)
+
+local cc = Instance.new("ColorCorrectionEffect")
+cc.Name = "JumpScareCC"
+cc.Contrast = 1
+cc.Saturation = -1
+cc.Brightness = -0.2
+cc.Parent = Lighting
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui")
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = PlayerGui
+
+local img = Instance.new("ImageLabel")
+img.AnchorPoint = Vector2.new(0.5, 0.5)
+img.Position = UDim2.fromScale(0.5, 0.5)
+img.Size = UDim2.fromScale(0.3, 0.3)
+img.BackgroundTransparency = 1
+img.Image = IMAGE_ID
+img.ScaleType = Enum.ScaleType.Fit
+img.Parent = gui
+
+-- =====================================================
+-- 🔗 HOOK: SCRIPT PHỤ (CHẠY NGAY KHI JUMPSCARE BẮT ĐẦU)
+-- =====================================================
+task.spawn(function()
+	-- ⬇⬇⬇ DÁN SCRIPT PHỤ CỦA BẠN VÀO ĐÂY ⬇⬇⬇
+	-- ví dụ:
+	-- game.Workspace.Gravity = 0
+	-- print("Jumpscare hook activated")
+ function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "TAKLJUMP"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/lv_0_20260104130055.mp3?raw=true", 1, " TAKLJUMP")
+
+wait(4)
+game.Workspace.TAKLJUMP:Destroy()
+end)
+
+-- ===== SHAKE + TIMER =====
+local startTime = tick()
+local shakeStrength = 6
+local conn
+
+conn = RunService.RenderStepped:Connect(function()
+	if tick() - startTime >= JUMPSCARE_DURATION then
+		-- CLEANUP
+		conn:Disconnect()
+		gui:Destroy()
+
+		-- RESTORE LIGHTING
+		for k, v in pairs(originalLighting) do
+			Lighting[k] = v
+		end
+
+		if cc then cc:Destroy() end
+		if originalCC then originalCC.Parent = Lighting end
+
+		return
+	end
+
+	local x = math.random(-shakeStrength, shakeStrength)
+	local y = math.random(-shakeStrength, shakeStrength)
+	img.Position = UDim2.fromScale(0.5, 0.5) + UDim2.fromOffset(x, y)
+end)
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+
+--// JUMPSCARE SCRIPT (IMAGE + DARK ENV | NO SOUND | WITH HOOK)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ===== CONFIG =====
+local IMAGE_ID = "rbxassetid://140575828191525"
+local JUMPSCARE_DURATION = 1 -- thời gian jumpscare (giây)
+-- ==================
+
+-- ===== SAVE ORIGINAL LIGHTING =====
+local originalLighting = {
+	Brightness = Lighting.Brightness,
+	Ambient = Lighting.Ambient,
+	OutdoorAmbient = Lighting.OutdoorAmbient,
+	FogEnd = Lighting.FogEnd,
+	FogStart = Lighting.FogStart,
+	FogColor = Lighting.FogColor,
+}
+
+local originalCC
+for _, v in ipairs(Lighting:GetChildren()) do
+	if v:IsA("ColorCorrectionEffect") then
+		originalCC = v:Clone()
+	end
+end
+
+-- ===== APPLY DARK ENVIRONMENT =====
+Lighting.Brightness = 0
+Lighting.Ambient = Color3.new(0, 0, 0)
+Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+Lighting.FogStart = 0
+Lighting.FogEnd = 50
+Lighting.FogColor = Color3.new(0, 0, 0)
+
+local cc = Instance.new("ColorCorrectionEffect")
+cc.Name = "JumpScareCC"
+cc.Contrast = 1
+cc.Saturation = -1
+cc.Brightness = -0.2
+cc.Parent = Lighting
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui")
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = PlayerGui
+
+local img = Instance.new("ImageLabel")
+img.AnchorPoint = Vector2.new(0.5, 0.5)
+img.Position = UDim2.fromScale(0.5, 0.5)
+img.Size = UDim2.fromScale(0.6, 0.6)
+img.BackgroundTransparency = 1
+img.Image = IMAGE_ID
+img.ScaleType = Enum.ScaleType.Fit
+img.Parent = gui
+
+-- =====================================================
+-- 🔗 HOOK: SCRIPT PHỤ (CHẠY NGAY KHI JUMPSCARE BẮT ĐẦU)
+-- =====================================================
+task.spawn(function()
+	-- ⬇⬇⬇ DÁN SCRIPT PHỤ CỦA BẠN VÀO ĐÂY ⬇⬇⬇
+	-- ví dụ:
+	-- game.Workspace.Gravity = 0
+	-- print("Jumpscare hook activated")
+ function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "TAKLJUMP"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/lv_0_20260104130055.mp3?raw=true", 1, " TAKLJUMP")
+
+wait(4)
+game.Workspace.TAKLJUMP:Destroy()
+end)
+
+-- ===== SHAKE + TIMER =====
+local startTime = tick()
+local shakeStrength = 6
+local conn
+
+conn = RunService.RenderStepped:Connect(function()
+	if tick() - startTime >= JUMPSCARE_DURATION then
+		-- CLEANUP
+		conn:Disconnect()
+		gui:Destroy()
+
+		-- RESTORE LIGHTING
+		for k, v in pairs(originalLighting) do
+			Lighting[k] = v
+		end
+
+		if cc then cc:Destroy() end
+		if originalCC then originalCC.Parent = Lighting end
+
+		return
+	end
+
+	local x = math.random(-shakeStrength, shakeStrength)
+	local y = math.random(-shakeStrength, shakeStrength)
+	img.Position = UDim2.fromScale(0.5, 0.5) + UDim2.fromOffset(x, y)
+end)
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+
+--// ADVANCED JUMPSCARE (2 IMAGES | FADE | SHAKE | DARK ENV | CLEAN STATE)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ===== CONFIG =====
+local IMAGE_MAIN = "rbxassetid://140575828191525"
+local IMAGE_SUB  = "rbxassetid://103186358600129" -- 👈 ẢNH THỨ 2
+
+local FADE_MAIN = 5
+local FADE_SUB  = 7 -- chậm hơn 2 giây
+
+local SHAKE_MAIN = 12
+local SHAKE_SUB  = 6
+-- ==================
+
+-- ===== STATE =====
+_G.JumpScareActive = true
+
+-- ===== SAVE LIGHTING =====
+local original = {
+	Brightness = Lighting.Brightness,
+	Ambient = Lighting.Ambient,
+	OutdoorAmbient = Lighting.OutdoorAmbient,
+	FogStart = Lighting.FogStart,
+	FogEnd = Lighting.FogEnd,
+	FogColor = Lighting.FogColor,
+}
+
+-- ===== DARK ENV =====
+Lighting.Brightness = 0
+Lighting.Ambient = Color3.new(0,0,0)
+Lighting.OutdoorAmbient = Color3.new(0,0,0)
+Lighting.FogStart = 0
+Lighting.FogEnd = 60
+Lighting.FogColor = Color3.new(0,0,0)
+
+local cc = Instance.new("ColorCorrectionEffect")
+cc.Contrast = 1
+cc.Saturation = -1
+cc.Brightness = -0.3
+cc.Parent = Lighting
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui")
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+-- ===== IMAGE 1 (MAIN) =====
+local img1 = Instance.new("ImageLabel")
+img1.AnchorPoint = Vector2.new(0.5, 0.5)
+img1.Position = UDim2.fromScale(0.5, 0.5)
+img1.Size = UDim2.fromScale(0.75, 0.75)
+img1.BackgroundTransparency = 1
+img1.Image = IMAGE_MAIN
+img1.ScaleType = Enum.ScaleType.Fit
+img1.Parent = gui
+
+local ar1 = Instance.new("UIAspectRatioConstraint")
+ar1.AspectType = Enum.AspectType.ScaleWithParentSize
+ar1.Parent = img1
+
+-- ===== IMAGE 2 (SUB – DƯỚI MÀN HÌNH) =====
+local img2 = Instance.new("ImageLabel")
+img2.AnchorPoint = Vector2.new(0.5, 1)
+img2.Position = UDim2.fromScale(0.5, 0.95)
+img2.Size = UDim2.fromScale(0.55, 0.55)
+img2.BackgroundTransparency = 1
+img2.Image = IMAGE_SUB
+img2.ScaleType = Enum.ScaleType.Fit
+img2.Parent = gui
+
+local ar2 = Instance.new("UIAspectRatioConstraint")
+ar2.AspectType = Enum.AspectType.ScaleWithParentSize
+ar2.Parent = img2
+
+-- =====================================================
+-- 🔗 HOOK – SCRIPT PHỤ
+-- =====================================================
+task.spawn(function()
+	while _G.JumpScareActive do
+		-- ⬇⬇⬇ SCRIPT PHỤ CỦA BẠN ⬇⬇⬇
+   function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Name = "FINALJUMP"
+    sound.Volume = 1
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/lv_0_20260104201553.mp3?raw=true", 1, " FINALJUMP")
+		task.wait()
+	end
+
+	-- CLEANUP SCRIPT PHỤ Ở ĐÂY
+wait(30)
+game.Workspace.FINALJUMP:Destroy()
+end)
+
+-- ===== UPDATE LOOP =====
+local startTime = tick()
+local conn
+
+conn = RunService.RenderStepped:Connect(function()
+	local elapsed = tick() - startTime
+
+	local a1 = math.clamp(elapsed / FADE_MAIN, 0, 1)
+	local a2 = math.clamp(elapsed / FADE_SUB, 0, 1)
+
+	-- IMAGE FADE
+	img1.ImageTransparency = a1
+	img2.ImageTransparency = a2
+
+	-- ENV FADE (THEO ẢNH 1)
+	cc.Brightness = -0.3 * (1 - a1)
+	cc.Contrast = 1 * (1 - a1)
+
+	-- SHAKE IMAGE 1 (MẠNH)
+	local x1 = math.random(-SHAKE_MAIN, SHAKE_MAIN)
+	local y1 = math.random(-SHAKE_MAIN, SHAKE_MAIN)
+	img1.Position = UDim2.fromScale(0.5, 0.5) + UDim2.fromOffset(x1, y1)
+
+	-- SHAKE IMAGE 2 (NHẸ)
+	local x2 = math.random(-SHAKE_SUB, SHAKE_SUB)
+	local y2 = math.random(-SHAKE_SUB, SHAKE_SUB)
+	img2.Position = UDim2.fromScale(0.5, 0.95) + UDim2.fromOffset(x2, y2)
+
+	-- END
+	if elapsed >= FADE_SUB then
+		conn:Disconnect()
+		_G.JumpScareActive = false
+
+		gui:Destroy()
+		cc:Destroy()
+
+		for k, v in pairs(original) do
+			Lighting[k] = v
+		end
+	end
+end)
