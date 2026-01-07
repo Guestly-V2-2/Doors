@@ -1,0 +1,210 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+local Backpack = player:WaitForChild("Backpack")
+
+--------------------------------------------------
+-- 🔴 CONFIG
+--------------------------------------------------
+local ASSET_ID = 120133129723048            -- ID ITEM (GetObjects)
+local HOLD_ANIMATION_ID = 100296215597460   -- Hold R15
+local CLICK_ANIMATION_ID = 105155577874281  -- Animation khi bấm
+local CLICK_SOUND_ID = 14006215368     -- 🔊 SoundId (bạn tự gắn)
+local COOLDOWN_TIME = 15              -- giây
+--------------------------------------------------
+
+--------------------------------------------------
+-- 📦 LOAD ITEM
+--------------------------------------------------
+local objects = game:GetObjects("rbxassetid://" .. ASSET_ID)
+if not objects or #objects == 0 then
+    warn("Không load được asset")
+    return
+end
+
+local asset = objects[1]
+asset.Parent = nil
+
+local tool
+if asset:IsA("Tool") then
+    tool = asset
+else
+    tool = Instance.new("Tool")
+    tool.Name = asset.Name
+    tool.RequiresHandle = false
+    asset.Parent = tool
+end
+tool.Parent = Backpack
+
+--------------------------------------------------
+-- 🎭 ANIMATION UTILS
+--------------------------------------------------
+local holdTrack
+local lastClick = 0
+local cooldownRunning = false
+
+local function getAnimator()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if not animator then
+        animator = Instance.new("Animator")
+        animator.Parent = humanoid
+    end
+    return animator
+end
+
+--------------------------------------------------
+-- 🧩 GUI
+--------------------------------------------------
+local gui = Instance.new("ScreenGui")
+gui.Name = "SpawnButtonGui"
+gui.ResetOnSpawn = false
+gui.Enabled = false
+gui.Parent = PlayerGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.fromScale(0.14, 0.08)
+button.Position = UDim2.fromScale(0.85, 0.5)
+button.AnchorPoint = Vector2.new(0.5, 0.5)
+button.Text = "Spawn"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+button.Font = Enum.Font.GothamBold
+button.TextScaled = true
+button.BorderSizePixel = 0
+button.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0.2, 0)
+corner.Parent = button
+
+--------------------------------------------------
+-- 🔊 SOUND
+--------------------------------------------------
+local clickSound = Instance.new("Sound")
+clickSound.SoundId = "rbxassetid://" .. CLICK_SOUND_ID
+clickSound.Volume = 1
+clickSound.Parent = button
+
+--------------------------------------------------
+-- 🎲 RANDOM SCRIPT (BẠN TỰ GẮN)
+--------------------------------------------------
+local RandomScripts = {
+
+    function() -- 1
+        local ok, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/TBOSPAWN"))()
+            end
+    end,
+
+    function() -- 2
+        local ok, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/TBOSPAWN"))()
+            end
+    end,
+
+    function() -- 3
+        local ok, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/TBOSPAWN"))()
+            end
+    end,
+
+    function() -- 4
+        local ok, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/TBOSPAWN"))()
+            end
+     end
+}
+
+--------------------------------------------------
+-- ⏳ COOLDOWN DISPLAY
+--------------------------------------------------
+local function startCooldown()
+    cooldownRunning = true
+    button.AutoButtonColor = false
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+    for i = COOLDOWN_TIME, 1, -1 do
+        button.Text = "Cooldown (" .. i .. ")"
+        task.wait(1)
+    end
+
+    button.Text = "Spawn"
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.AutoButtonColor = true
+    cooldownRunning = false
+end
+
+--------------------------------------------------
+-- ▶️ BUTTON CLICK
+--------------------------------------------------
+button.MouseButton1Click:Connect(function()
+    if cooldownRunning then return end
+
+    cooldownRunning = true
+
+    -- 🔊 Sound
+    clickSound:Play()
+
+    local animator = getAnimator()
+
+    -- ⛔ TẠM DỪNG HOLD
+    if holdTrack then
+        holdTrack:Stop()
+    end
+
+    -- ▶️ PLAY CLICK ANIMATION
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. CLICK_ANIMATION_ID
+
+    local clickTrack = animator:LoadAnimation(anim)
+    clickTrack.Priority = Enum.AnimationPriority.Action4 -- 🔥 CAO HƠN HOLD
+    clickTrack.Looped = false
+    clickTrack:Play()
+
+    -- 🎲 RANDOM SCRIPT
+    local index = math.random(1, #RandomScripts)
+    task.spawn(RandomScripts[index])
+
+    -- ⏳ CHỜ CLICK XONG → PLAY LẠI HOLD
+    clickTrack.Stopped:Wait()
+
+    if holdTrack then
+        holdTrack:Play()
+    end
+
+    -- ⏳ COOLDOWN
+    task.spawn(startCooldown)
+end)
+
+--------------------------------------------------
+-- 🧰 TOOL EVENTS
+--------------------------------------------------
+tool.Equipped:Connect(function()
+    gui.Enabled = true
+
+    local animator = getAnimator()
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. HOLD_ANIMATION_ID
+
+    holdTrack = animator:LoadAnimation(anim)
+    holdTrack.Priority = Enum.AnimationPriority.Action
+    holdTrack.Looped = true
+    holdTrack:Play()
+end)
+
+tool.Unequipped:Connect(function()
+    gui.Enabled = false
+
+    if holdTrack then
+        holdTrack:Stop()
+        holdTrack:Destroy()
+        holdTrack = nil
+    end
+end)
+
+--------------------------------------------------
+print("Item giver + cooldown countdown + sound READY")
+--------------------------------------------------
