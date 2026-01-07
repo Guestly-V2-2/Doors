@@ -107,7 +107,7 @@ gui = nil
 print("Progress + sound finished & cleaned")
 local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
 caption.TextColor3 = Color3.fromRGB(97, 2, 2)
-require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You just spawned "The Boiled One"!",true)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You just spawned 'The Boiled One'!",true)
 local sound1 = Instance.new("Sound")
 sound1.Name = "Spawn"
 sound1.SoundId = "rbxassetid://9159270931"
