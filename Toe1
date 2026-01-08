@@ -53,7 +53,8 @@ task.spawn(function()
     end
 end)
 
-task.wait(7)
+task.wait(5)
+vm8 = false
 if workspace:FindFirstChild("AmbientOfT2") then
     workspace.AmbientOfT2:Destroy()
 end
