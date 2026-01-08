@@ -41,3 +41,4 @@ end)
 
 wait(7)
 game.Workspace.TheBoiledOne:Destroy()
+vu8 = false
