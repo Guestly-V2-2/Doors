@@ -1,0 +1,1460 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+local Backpack = player:WaitForChild("Backpack")
+
+--------------------------------------------------
+-- 🔴 CONFIG
+--------------------------------------------------
+local ASSET_ID = 120133129723048            -- ID ITEM (GetObjects)
+local HOLD_ANIMATION_ID = 100296215597460   -- Hold R15
+local CLICK_ANIMATION_ID = 105155577874281  -- Animation khi bấm
+local CLICK_SOUND_ID = 14006215368     -- 🔊 SoundId (bạn tự gắn)
+local COOLDOWN_TIME = 15              -- giây
+--------------------------------------------------
+
+--------------------------------------------------
+-- 📦 LOAD ITEM
+--------------------------------------------------
+local objects = game:GetObjects("rbxassetid://" .. ASSET_ID)
+if not objects or #objects == 0 then
+    warn("Không load được asset")
+    return
+end
+
+local asset = objects[1]
+asset.Parent = nil
+
+local tool
+if asset:IsA("Tool") then
+    tool = asset
+else
+    tool = Instance.new("Tool")
+    tool.Name = asset.Name
+    tool.RequiresHandle = false
+    asset.Parent = tool
+end
+tool.Parent = Backpack
+
+--------------------------------------------------
+-- 🎭 ANIMATION UTILS
+--------------------------------------------------
+local holdTrack
+local lastClick = 0
+local cooldownRunning = false
+
+local function getAnimator()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if not animator then
+        animator = Instance.new("Animator")
+        animator.Parent = humanoid
+    end
+    return animator
+end
+
+--------------------------------------------------
+-- 🧩 GUI
+--------------------------------------------------
+local gui = Instance.new("ScreenGui")
+gui.Name = "SpawnButtonGui"
+gui.ResetOnSpawn = false
+gui.Enabled = false
+gui.Parent = PlayerGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.fromScale(0.14, 0.08)
+button.Position = UDim2.fromScale(0.85, 0.5)
+button.AnchorPoint = Vector2.new(0.5, 0.5)
+button.Text = "Spawn"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+button.Font = Enum.Font.GothamBold
+button.TextScaled = true
+button.BorderSizePixel = 0
+button.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0.2, 0)
+corner.Parent = button
+
+--------------------------------------------------
+-- 🔊 SOUND
+--------------------------------------------------
+local clickSound = Instance.new("Sound")
+clickSound.SoundId = "rbxassetid://" .. CLICK_SOUND_ID
+clickSound.Volume = 1
+clickSound.Parent = button
+
+--------------------------------------------------
+-- 🎲 RANDOM SCRIPT (BẠN TỰ GẮN)
+--------------------------------------------------
+local RandomScripts = {
+
+    function() -- Lunacy Eyes
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/LESPAWN"))()
+    end,
+
+    function() -- Supervisor (Lunacy)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/SVSPAWN"))()
+    end,
+
+    function() -- The Fallen (Lunacy)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/TFSPAWN"))()
+    end,
+
+    function() -- Vioblaze (Lunacy)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/VBSPAWN"))()
+     end,
+
+     function() -- Painer (Lunacy)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/PSSPAWN"))()
+     end,
+
+     function() -- Blocker (Lunacy)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/BKSPAWN"))()
+     end,
+
+     function() -- Trun (Lunacy)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/TSPAWN"))()
+     end,
+
+     function() -- Torness (Hallucination)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/TOSPAWN"))()
+     end,
+
+     function() -- Destructioner (Cizinuness)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/DTSPAWN"))()
+     end,
+
+     function() -- Pusher (Cizinuness)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/PSPAWN"))()
+     end,
+
+     function() -- Ripper (Hardcore Re-remastered)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/RPSPAWN"))()
+     end,
+
+     function() -- Rebound (Hardcore Re-remastered)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/RBSPAWM"))()
+     end,
+
+     function() -- Deer God (Hardcore Re-remastered)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/DGSPAWN"))()
+     end,}
+
+--------------------------------------------------
+-- ⏳ COOLDOWN DISPLAY
+--------------------------------------------------
+local function startCooldown()
+    cooldownRunning = true
+    button.AutoButtonColor = false
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+    for i = COOLDOWN_TIME, 1, -1 do
+        button.Text = "Cooldown (" .. i .. ")"
+        task.wait(1)
+    end
+
+    button.Text = "Spawn random entity"
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.AutoButtonColor = true
+    cooldownRunning = false
+end
+
+--------------------------------------------------
+-- ▶️ BUTTON CLICK
+--------------------------------------------------
+button.MouseButton1Click:Connect(function()
+    if cooldownRunning then return end
+
+    cooldownRunning = true
+
+    -- 🔊 Sound
+    clickSound:Play()
+
+    local animator = getAnimator()
+
+    -- ⛔ TẠM DỪNG HOLD
+    if holdTrack then
+        holdTrack:Stop()
+    end
+
+    -- ▶️ PLAY CLICK ANIMATION
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. CLICK_ANIMATION_ID
+
+    local clickTrack = animator:LoadAnimation(anim)
+    clickTrack.Priority = Enum.AnimationPriority.Action4 -- 🔥 CAO HƠN HOLD
+    clickTrack.Looped = false
+    clickTrack:Play()
+
+    -- 🎲 RANDOM SCRIPT
+    local index = math.random(1, #RandomScripts)
+    task.spawn(RandomScripts[index])
+
+    -- ⏳ CHỜ CLICK XONG → PLAY LẠI HOLD
+    clickTrack.Stopped:Wait()
+
+    if holdTrack then
+        holdTrack:Play()
+    end
+
+    -- ⏳ COOLDOWN
+    task.spawn(startCooldown)
+end)
+
+--------------------------------------------------
+-- 🧰 TOOL EVENTS
+--------------------------------------------------
+tool.Equipped:Connect(function()
+    gui.Enabled = true
+
+    local animator = getAnimator()
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. HOLD_ANIMATION_ID
+
+    holdTrack = animator:LoadAnimation(anim)
+    holdTrack.Priority = Enum.AnimationPriority.Action
+    holdTrack.Looped = true
+    holdTrack:Play()
+end)
+
+tool.Unequipped:Connect(function()
+    gui.Enabled = false
+
+    if holdTrack then
+        holdTrack:Stop()
+        holdTrack:Destroy()
+        holdTrack = nil
+    end
+end)
+
+--------------------------------------------------
+print("Item giver + cooldown countdown + sound READY")
+--------------------------------------------------
+
+--------------------------------------------------
+-- HEALING GUI (ALL IN ONE)
+--------------------------------------------------
+
+-- Button Healing (tren Spawn)
+local healButton = Instance.new("TextButton")
+healButton.Size = button.Size
+healButton.Position = button.Position - UDim2.fromScale(0, 0.1)
+healButton.AnchorPoint = button.AnchorPoint
+healButton.Text = "Healing"
+healButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+healButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+healButton.Font = Enum.Font.GothamBold
+healButton.TextScaled = true
+healButton.BorderSizePixel = 0
+healButton.Visible = false
+healButton.Parent = gui
+
+local healBtnCorner = Instance.new("UICorner")
+healBtnCorner.CornerRadius = UDim.new(0.2, 0)
+healBtnCorner.Parent = healButton
+
+--------------------------------------------------
+-- HEAL GUI
+--------------------------------------------------
+
+local healGui = Instance.new("ScreenGui")
+healGui.Name = "HealGui"
+healGui.ResetOnSpawn = false
+healGui.Enabled = false
+healGui.Parent = PlayerGui
+
+local healBg = Instance.new("Frame")
+healBg.Size = UDim2.fromScale(0.6, 0.4)
+healBg.Position = UDim2.fromScale(0.5, 0.5)
+healBg.AnchorPoint = Vector2.new(0.5, 0.5)
+healBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+healBg.BorderSizePixel = 0
+healBg.Parent = healGui
+
+local healBgCorner = Instance.new("UICorner")
+healBgCorner.CornerRadius = UDim.new(0.05, 0)
+healBgCorner.Parent = healBg
+
+-- Close button X
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.fromScale(0.08, 0.12)
+closeButton.Position = UDim2.fromScale(0.95, 0.05)
+closeButton.AnchorPoint = Vector2.new(1, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextScaled = true
+closeButton.BorderSizePixel = 0
+closeButton.Parent = healBg
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0.3, 0)
+closeCorner.Parent = closeButton
+
+-- Input box (chi nhap so)
+local inputBox = Instance.new("TextBox")
+inputBox.Size = UDim2.fromScale(0.8, 0.2)
+inputBox.Position = UDim2.fromScale(0.5, 0.4)
+inputBox.AnchorPoint = Vector2.new(0.5, 0.5)
+inputBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+inputBox.Font = Enum.Font.GothamBold
+inputBox.TextScaled = true
+inputBox.PlaceholderText = "Enter your numbers to heal"
+inputBox.ClearTextOnFocus = false
+inputBox.Text = ""
+inputBox.Parent = healBg
+
+local inputCorner = Instance.new("UICorner")
+inputCorner.CornerRadius = UDim.new(0.2, 0)
+inputCorner.Parent = inputBox
+
+-- Confirm heal button
+local confirmHeal = Instance.new("TextButton")
+confirmHeal.Size = UDim2.fromScale(0.5, 0.18)
+confirmHeal.Position = UDim2.fromScale(0.5, 0.7)
+confirmHeal.AnchorPoint = Vector2.new(0.5, 0.5)
+confirmHeal.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+confirmHeal.TextColor3 = Color3.fromRGB(255, 255, 255)
+confirmHeal.Font = Enum.Font.GothamBold
+confirmHeal.TextScaled = true
+confirmHeal.Text = "Heal yourself"
+confirmHeal.Visible = false
+confirmHeal.BorderSizePixel = 0
+confirmHeal.Parent = healBg
+
+local confirmCorner = Instance.new("UICorner")
+confirmCorner.CornerRadius = UDim.new(0.2, 0)
+confirmCorner.Parent = confirmHeal
+
+--------------------------------------------------
+-- HEALING LOGIC
+--------------------------------------------------
+
+-- Loc chi cho phep nhap so
+inputBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local filtered = inputBox.Text:gsub("%D", "")
+    if inputBox.Text ~= filtered then
+        inputBox.Text = filtered
+    end
+    confirmHeal.Visible = filtered ~= ""
+end)
+
+-- Mo GUI heal
+healButton.MouseButton1Click:Connect(function()
+    healGui.Enabled = true
+    inputBox.Text = ""
+    confirmHeal.Visible = false
+end)
+
+-- Dong GUI
+closeButton.MouseButton1Click:Connect(function()
+    healGui.Enabled = false
+end)
+
+-- Heal player
+confirmHeal.MouseButton1Click:Connect(function()
+    local value = tonumber(inputBox.Text)
+    if not value then return end
+
+    local char = player.Character
+    if not char then return end
+
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    humanoid.Health = math.min(humanoid.MaxHealth, humanoid.Health + value)
+    local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(120, 255, 145)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You just healed yourself: " .. value)
+local sound2 = Instance.new("Sound")
+sound2.Name = "Healing"
+sound2.SoundId = "rbxassetid://7369745305"
+sound2.Volume = 1
+sound2.Parent = game.Workspace
+sound2:Play()
+
+--// Fade Fullscreen Image Script (Executor)
+--// Author: ChatGPT
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+--// GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FadeImageGui"
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+--// Image
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.Size = UDim2.new(1, 0, 1, 0)
+ImageLabel.Position = UDim2.new(0, 0, 0, 0)
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Image = "rbxassetid://98254591226416" -- << THAY ID ẢNH
+ImageLabel.ImageTransparency = 1 -- bắt đầu ẩn
+ImageLabel.ScaleType = Enum.ScaleType.Stretch
+ImageLabel.Parent = ScreenGui
+
+--// Tween settings
+local fadeInInfo = TweenInfo.new(
+	2, -- 2 giây fade in
+	Enum.EasingStyle.Linear,
+	Enum.EasingDirection.Out
+)
+
+local fadeOutInfo = TweenInfo.new(
+	3, -- 3 giây fade out
+	Enum.EasingStyle.Linear,
+	Enum.EasingDirection.Out
+)
+
+--// Fade In
+local fadeInTween = TweenService:Create(
+	ImageLabel,
+	fadeInInfo,
+	{ImageTransparency = 0}
+)
+
+--// Fade Out
+local fadeOutTween = TweenService:Create(
+	ImageLabel,
+	fadeOutInfo,
+	{ImageTransparency = 1}
+)
+
+--// Play sequence
+fadeInTween:Play()
+fadeInTween.Completed:Wait()
+
+task.wait(3) -- giữ nguyên 3 giây
+
+fadeOutTween:Play()
+fadeOutTween.Completed:Wait()
+
+--// Cleanup
+ScreenGui:Destroy()
+sound2:Destroy()
+end)
+
+--------------------------------------------------
+-- TOOL EVENTS (HIEN / AN GUI)
+--------------------------------------------------
+
+tool.Equipped:Connect(function()
+    healButton.Visible = true
+end)
+
+tool.Unequipped:Connect(function()
+    healButton.Visible = false
+    healGui.Enabled = false
+end)
+
+--------------------------------------------------
+-- GIVE ITEMS + ITEMS LIST (FULL ONE SCRIPT)
+--------------------------------------------------
+
+-- REQUIRE
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- GIẢ ĐỊNH ĐÃ CÓ:
+-- tool
+-- gui
+-- healButton
+
+--------------------------------------------------
+-- HOOK: ITEM KHÔNG TỒN TẠI
+--------------------------------------------------
+local function OnInvalidItem(itemName)
+    -- === BAN TU GAN SCRIPT O DAY ===
+    local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 0, 0)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("This item doesn't exist: " .. itemName)
+local sound4 = Instance.new("Sound")
+sound4.Name = "Failed"
+sound4.SoundId = "rbxassetid://2390695935"
+sound4.Volume = 1
+sound4.Parent = game.Workspace
+sound4:Play()
+wait(3)
+sound4:Destroy()
+end
+
+--------------------------------------------------
+-- BUTTON GIVE ITEMS
+--------------------------------------------------
+local giveItemButton = Instance.new("TextButton")
+giveItemButton.Size = healButton.Size
+giveItemButton.Position = healButton.Position - UDim2.fromScale(0, 0.1)
+giveItemButton.AnchorPoint = healButton.AnchorPoint
+giveItemButton.Text = "Give Items"
+giveItemButton.TextColor3 = Color3.fromRGB(255,255,255)
+giveItemButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+giveItemButton.Font = Enum.Font.GothamBold
+giveItemButton.TextScaled = true
+giveItemButton.BorderSizePixel = 0
+giveItemButton.Visible = false
+giveItemButton.Parent = gui
+Instance.new("UICorner", giveItemButton).CornerRadius = UDim.new(0.2,0)
+
+--------------------------------------------------
+-- GUI GIVE ITEMS
+--------------------------------------------------
+local giveGui
+local listFrame
+
+--------------------------------------------------
+-- ITEM SCRIPTS (BAN TU THEM)
+--------------------------------------------------
+local AllowedItems = {
+    ["Crucifix"] = function()
+        _G.Uses = 1
+_G.Range = 30
+_G.OnAnything = true
+_G.Fail = false
+_G.Variant = "Electric"
+loadstring(game:HttpGet('https://raw.githubusercontent.com/PenguinManiack/Crucifix/main/Crucifix.lua'))()
+    end,
+
+    ["Seek Gun"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/notpoiu/Scripts/main/seekgun.lua"))()
+    end,
+
+     ["Scanner"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/notpoiu/Scripts/main/Scanner.lua"))()
+    end,
+
+     ["Moonlight Bottle"] = function()
+        loadstring(game:HttpGet('https://gist.githubusercontent.com/IdkMyNameLoll/04d7dd5e02688624b958b8c2604b924c/raw/9e86b34249f44ed2dd433176e67daaf3db30cde8/MoonBottle'))()
+    end,
+
+     ["Spirallight Bottle"] = function()
+        loadstring(game:HttpGet('https://gist.githubusercontent.com/IdkMyNameLoll/8b05c837bea9effac2554340465b4be1/raw/3f3be0ee72e7f153db39a16a40fa63dce6cde72d/SpiralBottle'))()
+    end,
+
+    ["Starlight Barrel"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/notpoiu/Scripts/refs/heads/main/StarJug.lua"))()
+    end,
+
+     ["Black Hole"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/iimateiYT/Scripts/main/Black%20Hole.lua"))()
+    end,
+
+    ["Grass Scanner"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Matthew201322/Doors-Scriptee/refs/heads/main/grass%20tablet.lua"))()
+    end,
+
+     ["Glitch Scanner"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Agadigas/Doors/refs/heads/main/Glitched%20Scanner%20by%20Custom%20Doors"))()
+    end,
+
+    ["Resizer Stick"] = function()
+        loadstring(game:HttpGet('https://gist.githubusercontent.com/IdkMyNameLoll/f0178af2301ca90c09895f10f3e7bd4b/raw/46899ccc3626f3485d85f990012f7ef37ae52e5e/resizerDoorsRemake'))()
+    end,
+
+    ["Holy Hand Grenade"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Darker-TheDarkestGuy/Modes/refs/heads/main/Holy%20Hand%20Grenade%20On%20Anything"))()
+    end,
+
+    ["Golden Gummy Flashlight"] = function()
+        loadstring(game:HttpGet(("https://raw.githubusercontent.com/aadyian9000/the-thing/main/GoldenGummyFlashlight.lua"),true))()
+    end,
+
+    ["Rocket Launcher"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/notpoiu/Scripts/main/rocketLauncher.lua"))()
+    end,
+
+    ["Pink Scanner"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Matthew201322/Doors-Scriptee/refs/heads/main/the%20tablet.luau"))()
+    end,
+
+    ["Golden Scanner"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Darker-TheDarkestGuy/Modes/refs/heads/main/Golden%20Scanner"))()
+    end,
+
+    ["Mischievous Candle"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/kodbolx/kodbolhub/refs/heads/main/mischievouscandle.lua"))()
+    end,
+
+    ["Curious Candle"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/kodbolx/kodbolhub/refs/heads/main/curiouscandle.lua"))()
+    end,
+
+    ["Guiding Candle"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/kodbolx/kodbolhub/refs/heads/main/guidingcandle.lua"))()
+    end,
+
+    ["Gummy Flashlight"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/bocaj111004/Scripts/refs/heads/main/GummyFlashlight.lua"))()
+    end,
+
+    ["Vitamin (Infinity)"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Darker-TheDarkestGuy/Scripts/refs/heads/main/Vitamin"))()
+    end,
+
+    ["Purple Flashlight"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/RBXDM/ScrtptsMode/refs/heads/main/Inventory/Item/Purple-FlashLight"))()
+    end,
+
+    ["Mischievous Crucifix"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Darker-TheDarkestGuy/Scripts/refs/heads/main/Mischievous%20Crucifix%20(Legits%20Mod%20Vers)"))()
+    end,
+
+    ["Bloxy Cola"] = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Darker-TheDarkestGuy/Scripts/refs/heads/main/Bloxy%20cola"))()
+    end
+}
+
+--------------------------------------------------
+-- CREATE GIVE GUI
+--------------------------------------------------
+local function createGiveGui()
+    giveGui = Instance.new("ScreenGui")
+    giveGui.Name = "GiveItemGui"
+    giveGui.ResetOnSpawn = false
+    giveGui.Parent = PlayerGui
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.fromScale(0.6,0.4)
+    bg.Position = UDim2.fromScale(0.5,0.5)
+    bg.AnchorPoint = Vector2.new(0.5,0.5)
+    bg.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    bg.BorderSizePixel = 0
+    bg.Parent = giveGui
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0.05,0)
+
+    -- Close Give GUI
+    local close = Instance.new("TextButton")
+    close.Size = UDim2.fromScale(0.08,0.12)
+    close.Position = UDim2.fromScale(0.95,0.05)
+    close.AnchorPoint = Vector2.new(1,0)
+    close.Text = "X"
+    close.TextColor3 = Color3.fromRGB(255,255,255)
+    close.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    close.Font = Enum.Font.GothamBold
+    close.TextScaled = true
+    close.BorderSizePixel = 0
+    close.Parent = bg
+    Instance.new("UICorner", close).CornerRadius = UDim.new(0.3,0)
+
+    --------------------------------------------------
+    -- ITEMS LIST BUTTON
+    --------------------------------------------------
+    local listButton = Instance.new("TextButton")
+    listButton.Size = UDim2.fromScale(0.5,0.15)
+    listButton.Position = UDim2.fromScale(0.5,0.2)
+    listButton.AnchorPoint = Vector2.new(0.5,0.5)
+    listButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    listButton.TextColor3 = Color3.fromRGB(255,255,255)
+    listButton.Font = Enum.Font.GothamBold
+    listButton.TextScaled = true
+    listButton.Text = "Items List"
+    listButton.BorderSizePixel = 0
+    listButton.Parent = bg
+    Instance.new("UICorner", listButton).CornerRadius = UDim.new(0.2,0)
+
+    --------------------------------------------------
+    -- TEXTBOX
+    --------------------------------------------------
+    local itemBox = Instance.new("TextBox")
+    itemBox.Size = UDim2.fromScale(0.8,0.18)
+    itemBox.Position = UDim2.fromScale(0.5,0.4)
+    itemBox.AnchorPoint = Vector2.new(0.5,0.5)
+    itemBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    itemBox.TextColor3 = Color3.fromRGB(255,255,255)
+    itemBox.Font = Enum.Font.GothamBold
+    itemBox.TextScaled = true
+    itemBox.PlaceholderText = "Enter any items names to get it"
+    itemBox.ClearTextOnFocus = false
+    itemBox.Text = ""
+    itemBox.Parent = bg
+    Instance.new("UICorner", itemBox).CornerRadius = UDim.new(0.2,0)
+
+    --------------------------------------------------
+    -- CONFIRM BUTTON
+    --------------------------------------------------
+    local confirm = Instance.new("TextButton")
+    confirm.Size = UDim2.fromScale(0.6,0.18)
+    confirm.Position = UDim2.fromScale(0.5,0.7)
+    confirm.AnchorPoint = Vector2.new(0.5,0.5)
+    confirm.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    confirm.TextColor3 = Color3.fromRGB(255,255,255)
+    confirm.Font = Enum.Font.GothamBold
+    confirm.TextScaled = true
+    confirm.Text = "Give item to yourself"
+    confirm.Visible = false
+    confirm.BorderSizePixel = 0
+    confirm.Parent = bg
+    Instance.new("UICorner", confirm).CornerRadius = UDim.new(0.2,0)
+
+    --------------------------------------------------
+    -- OPEN ITEMS LIST
+    --------------------------------------------------
+    local function openItemList()
+        if listFrame then listFrame:Destroy() end
+
+        listFrame = Instance.new("Frame")
+        listFrame.Size = UDim2.fromScale(0.7,0.7)
+        listFrame.Position = UDim2.fromScale(0.5,0.55)
+        listFrame.AnchorPoint = Vector2.new(0.5,0.5)
+        listFrame.BackgroundColor3 = Color3.fromRGB(70,70,70)
+        listFrame.BorderSizePixel = 0
+        listFrame.Parent = bg
+        Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0.08,0)
+
+        -- X
+        local listClose = Instance.new("TextButton")
+        listClose.Size = UDim2.fromScale(0.1,0.1)
+        listClose.Position = UDim2.fromScale(0.98,0.02)
+        listClose.AnchorPoint = Vector2.new(1,0)
+        listClose.Text = "X"
+        listClose.TextColor3 = Color3.fromRGB(255,255,255)
+        listClose.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        listClose.Font = Enum.Font.GothamBold
+        listClose.TextScaled = true
+        listClose.BorderSizePixel = 0
+        listClose.Parent = listFrame
+        Instance.new("UICorner", listClose).CornerRadius = UDim.new(0.3,0)
+
+        listClose.MouseButton1Click:Connect(function()
+            listFrame:Destroy()
+            listFrame = nil
+        end)
+
+        local scroll = Instance.new("ScrollingFrame")
+        scroll.Size = UDim2.fromScale(0.95,0.85)
+        scroll.Position = UDim2.fromScale(0.5,0.55)
+        scroll.AnchorPoint = Vector2.new(0.5,0.5)
+        scroll.CanvasSize = UDim2.new(0,0,0,0)
+        scroll.ScrollBarImageTransparency = 0.3
+        scroll.BackgroundTransparency = 1
+        scroll.BorderSizePixel = 0
+        scroll.Parent = listFrame
+
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0,8)
+        layout.Parent = scroll
+
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+        end)
+
+        for itemName,_ in pairs(AllowedItems) do
+            local cell = Instance.new("TextButton")
+            cell.Size = UDim2.new(1,-10,0,40)
+            cell.BackgroundColor3 = Color3.fromRGB(0,0,0)
+            cell.TextColor3 = Color3.fromRGB(255,255,255)
+            cell.Font = Enum.Font.GothamBold
+            cell.TextScaled = true
+            cell.Text = itemName
+            cell.BorderSizePixel = 0
+            cell.Parent = scroll
+            Instance.new("UICorner", cell).CornerRadius = UDim.new(0.2,0)
+
+            cell.MouseButton1Click:Connect(function()
+                itemBox.Text = itemName
+                confirm.Visible = true
+            end)
+        end
+    end
+
+    --------------------------------------------------
+    -- LOGIC
+    --------------------------------------------------
+    itemBox:GetPropertyChangedSignal("Text"):Connect(function()
+        confirm.Visible = itemBox.Text ~= ""
+    end)
+
+    confirm.MouseButton1Click:Connect(function()
+        local itemName = itemBox.Text
+        local func = AllowedItems[itemName]
+
+        if func then
+            pcall(func)
+            local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 226, 148)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You just got an item: " .. itemName)
+local sound3 = Instance.new("Sound")
+sound3.Name = "Give"
+sound3.SoundId = "rbxassetid://101569203360944"
+sound3.Volume = 2
+sound3.Parent = game.Workspace
+sound3:Play()
+wait(3)
+sound3:Destroy()
+        else
+            OnInvalidItem(itemName)
+        end
+    end)
+
+    listButton.MouseButton1Click:Connect(openItemList)
+
+    close.MouseButton1Click:Connect(function()
+        if listFrame then listFrame:Destroy() end
+        giveGui:Destroy()
+        giveGui = nil
+    end)
+end
+
+--------------------------------------------------
+-- BUTTON & TOOL EVENTS
+--------------------------------------------------
+giveItemButton.MouseButton1Click:Connect(function()
+    if giveGui then giveGui:Destroy() end
+    createGiveGui()
+end)
+
+tool.Equipped:Connect(function()
+    giveItemButton.Visible = true
+end)
+
+tool.Unequipped:Connect(function()
+    giveItemButton.Visible = false
+    if giveGui then giveGui:Destroy() giveGui = nil end
+end)
+
+--------------------------------------------------
+-- REMOVE ITEMS BUTTON (ALL IN ONE)
+--------------------------------------------------
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+--------------------------------------------------
+-- REMOVE BUTTON (BÊN PHẢI NÚT SPAWN)
+--------------------------------------------------
+local removeButton = Instance.new("TextButton")
+removeButton.Size = giveItemButton.Size
+removeButton.Position = giveItemButton.Position - UDim2.fromScale(0, 0.1)
+removeButton.AnchorPoint = giveItemButton.AnchorPoint
+removeButton.Text = "Remove all your items"
+removeButton.TextWrapped = true
+removeButton.TextScaled = true
+removeButton.Font = Enum.Font.GothamBold
+removeButton.TextColor3 = Color3.fromRGB(255,255,255)
+removeButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+removeButton.BorderSizePixel = 0
+removeButton.Visible = false
+removeButton.Parent = gui
+Instance.new("UICorner", removeButton).CornerRadius = UDim.new(0.2,0)
+
+--------------------------------------------------
+-- CONFIRM GUI
+--------------------------------------------------
+local confirmGui
+
+local function openConfirm()
+    if confirmGui then confirmGui:Destroy() end
+
+    confirmGui = Instance.new("Frame")
+    confirmGui.Size = UDim2.fromScale(0.6,0.35)
+    confirmGui.Position = UDim2.fromScale(0.5,0.5)
+    confirmGui.AnchorPoint = Vector2.new(0.5,0.5)
+    confirmGui.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    confirmGui.BorderSizePixel = 0
+    confirmGui.Parent = gui
+    Instance.new("UICorner", confirmGui).CornerRadius = UDim.new(0.05,0)
+
+    -- TEXT
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.fromScale(0.9,0.4)
+    title.Position = UDim2.fromScale(0.5,0.3)
+    title.AnchorPoint = Vector2.new(0.5,0.5)
+    title.BackgroundTransparency = 1
+    title.TextWrapped = true
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.TextColor3 = Color3.fromRGB(255,255,255)
+    title.Text = "Do you really want to remove all your items?\n(Except Admin Slap)"
+    title.Parent = confirmGui
+
+    -- NO BUTTON
+    local noBtn = Instance.new("TextButton")
+    noBtn.Size = UDim2.fromScale(0.35,0.25)
+    noBtn.Position = UDim2.fromScale(0.25,0.75)
+    noBtn.AnchorPoint = Vector2.new(0.5,0.5)
+    noBtn.Text = "No"
+    noBtn.Font = Enum.Font.GothamBold
+    noBtn.TextScaled = true
+    noBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    noBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+    noBtn.BorderSizePixel = 0
+    noBtn.Parent = confirmGui
+    Instance.new("UICorner", noBtn).CornerRadius = UDim.new(0.2,0)
+
+    -- YES BUTTON
+    local yesBtn = Instance.new("TextButton")
+    yesBtn.Size = noBtn.Size
+    yesBtn.Position = UDim2.fromScale(0.75,0.75)
+    yesBtn.AnchorPoint = Vector2.new(0.5,0.5)
+    yesBtn.Text = "Yes"
+    yesBtn.Font = Enum.Font.GothamBold
+    yesBtn.TextScaled = true
+    yesBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    yesBtn.BackgroundColor3 = Color3.fromRGB(0,170,0)
+    yesBtn.BorderSizePixel = 0
+    yesBtn.Parent = confirmGui
+    Instance.new("UICorner", yesBtn).CornerRadius = UDim.new(0.2,0)
+
+    --------------------------------------------------
+    -- NO LOGIC
+    --------------------------------------------------
+    noBtn.MouseButton1Click:Connect(function()
+        confirmGui:Destroy()
+        confirmGui = nil
+    end)
+
+    --------------------------------------------------
+    -- YES LOGIC (CÓ HOOK)
+    --------------------------------------------------
+    yesBtn.MouseButton1Click:Connect(function()
+
+        --------------------------------------------------
+        -- 🔌 HOOK SCRIPT PHỤ (BẠN GẮN Ở ĐÂY)
+        local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 92, 92)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You just removed all your items! (Except Admin Slap)",true)
+local sound1 = Instance.new("Sound")
+sound1.Name = "Removed"
+sound1.SoundId = "rbxassetid://106145041472451"
+sound1.Volume = 1
+sound1.Parent = game.Workspace
+sound1:Play()
+
+        --------------------------------------------------
+        -- REMOVE ITEMS LOGIC (GIỮ NGUYÊN)
+        --------------------------------------------------
+        local function clear(container)
+            for _, tool in ipairs(container:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name ~= "Slap Glove" then
+                    tool:Destroy()
+                end
+            end
+        end
+
+        if player.Character then
+            clear(player.Character)
+        end
+        clear(player.Backpack)
+
+        --------------------------------------------------
+        -- ĐÓNG CONFIRM GUI
+        --------------------------------------------------
+        confirmGui:Destroy()
+        confirmGui = nil
+        wait(5)
+        game.Workspace.Removed:Destroy()
+    end)
+end
+
+removeButton.MouseButton1Click:Connect(openConfirm)
+
+--------------------------------------------------
+-- TOOL EVENTS (HIỆN / ẨN)
+--------------------------------------------------
+tool.Equipped:Connect(function()
+    removeButton.Visible = true
+end)
+
+tool.Unequipped:Connect(function()
+    removeButton.Visible = false
+    if confirmGui then
+        confirmGui:Destroy()
+        confirmGui = nil
+    end
+end)
+
+--------------------------------------------------
+-- ENTITY SPAWNER (ALL IN ONE)
+--------------------------------------------------
+
+-- CONFIG
+local ENTITY_COOLDOWN = 3 -- giây
+
+--------------------------------------------------
+-- ENTITY DATA (BẠN TỰ GẮN SCRIPT)
+--------------------------------------------------
+local EntityList = {
+	["Deer God (Hardcore Re-remastered)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(162, 3, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Deer God (Hardcore Re-remastered)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsHubs/Tutorial/refs/heads/main/Deer%20God"))()
+	end,
+
+	["Lunacy Eyes (Lunacy)"] = function()
+ 
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Lunacy Eyes (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Fake-Eyes"))()
+	end,
+
+	["Supervisor (Lunacy)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Supervisor (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Lunacy-Supervisor"))()
+	end,
+
+  ["Painer (Lunacy)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Painer (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Painer"))()
+	end,
+
+  ["The Fallen (Lunacy)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'The Fallen (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/The%20Fallen"))()
+	end,
+
+  ["Vioblaze (Lunacy)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Vioblaze (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Vioblaze"))()
+	end,
+
+  ["Trun (Lunacy)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Trun (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/vuivuiviu2/Lunacy-mode-entity-thang-nao-an-cap-lam-con-cho/main/Trun"))()
+	end,
+
+  ["Chaser (Lunacy)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Chaser (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Chaser"))()
+	end,
+
+  ["Blocker (Lunacy)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(177, 3, 252)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Blocker (Lunacy)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Blocker"))()
+	end,
+
+  ["The Boiled One (Hallucination)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(82, 2, 2)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'The Boiled One (Hallucination)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/The%20boiled%20one"))()
+	end,
+
+  ["TOE1 (Hallucination)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(171, 158, 101)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'TOE1 (Hallucination)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Toe1"))()
+	end,
+
+  ["Torness (Hallucination)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(87, 87, 87)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Torness (Hallucination)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Torness"))()
+	end,
+
+  ["Pusher (Cizinuness)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 0, 0)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Pusher (Cizinuness)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Pusher"))()
+	end,
+
+  ["Destructioner (Cizinuness)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(0, 0, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Destructioner (Cizinuness)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Destructioner"))()
+	end,
+
+  ["In-Overseer (Cizinuness)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(213, 3, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'In-Overseer (Cizinuness)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/In-Overseer"))()
+	end,
+
+  ["Extractioner (Cizinuness)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(184, 184, 184)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Extractioner (Cizinuness)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Extractioner"))()
+	end,
+
+  ["Frostbite (Hardcore Re-remastered)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(0, 0, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Frostbite (Hardcore Re-remastered)'!",true)
+
+lloadstring(game:HttpGet("https://raw.githubusercontent.com/Darker-TheDarkestGuy/DOORS/refs/heads/main/FROSTBITE%20BUTEZ"))()
+	end,
+
+  ["Dread (Hardcore Re-remastered)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(189, 213, 219)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Dread (Hardcore Re-remastered)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsHubs/Tutorial/refs/heads/main/Dread"))()
+	end,
+
+  ["Rebound (Hardcore Re-remastered)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(3, 209, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Rebound (Hardcore Re-remastered)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsHubs/Tutorial/refs/heads/main/Rebound"))()
+	end,
+
+  ["Ripper (Hardcore Re-remastered)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 0, 0)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Ripper (Hardcore Re-remastered)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsHubs/Tutorial/refs/heads/main/Ripper"))()
+	end,
+
+  ["A-90 (Hardcore Re-remastered)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(212, 83, 83)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'A-90 (Hardcore Re-remastered)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsHubs/Tutorial/refs/heads/main/A-90%20hardocre%20concac"))()
+	end,
+
+  ["Shocker (Hardcore Re-remastered)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(0, 255, 0)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Shocker (Hardcore Re-remastered)'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DoorsHubs/Tutorial/refs/heads/main/Shocker%20hardcore%20concac"))()
+	end,
+
+  ["Nyxgrin (Voidness)"] = function()
+		
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(108, 5, 176)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You chose to spawn 'Nyxgrin (Voidness'!",true)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Nyxgrin"))()
+	end,
+}
+
+--------------------------------------------------
+-- HOOKS (BẠN GẮN SCRIPT PHỤ Ở ĐÂY)
+--------------------------------------------------
+local function OnSpawnEntity(entityName)
+ local sounds = Instance.new("Sound")
+sounds.Name = "Success"
+sounds.SoundId = "rbxassetid://9115975838"
+sounds.Volume = 2
+sounds.Parent = game.Workspace
+sounds:Play()
+wait(3)
+sounds:Destroy()
+end
+
+local function OnInvalidEntity(entityName)
+	local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 0, 0)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("This entity doesn't exist: " .. name)
+local soundi = Instance.new("Sound")
+soundi.Name = "Invalid"
+soundi.SoundId = "rbxassetid://83517496538471"
+soundi.Volume = 1
+soundi.Parent = game.Workspace
+soundi:Play()
+wait(3)
+soundi:Destroy()
+end
+
+--------------------------------------------------
+-- ENTITIES SPAWNER BUTTON (TRÊN REMOVE)
+--------------------------------------------------
+local entitiesButton = Instance.new("TextButton")
+entitiesButton.Size = removeButton.Size
+entitiesButton.Position = removeButton.Position - UDim2.fromScale(0, 0.1)
+entitiesButton.AnchorPoint = removeButton.AnchorPoint
+entitiesButton.Text = "Entities Spawner"
+entitiesButton.TextWrapped = true
+entitiesButton.TextScaled = true
+entitiesButton.Font = Enum.Font.GothamBold
+entitiesButton.TextColor3 = Color3.fromRGB(255,255,255)
+entitiesButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+entitiesButton.BorderSizePixel = 0
+entitiesButton.Visible = false
+entitiesButton.Parent = gui
+Instance.new("UICorner", entitiesButton).CornerRadius = UDim.new(0.2,0)
+
+--------------------------------------------------
+-- ENTITY GUI
+--------------------------------------------------
+local entityGui
+local entityListFrame
+local cooldownRunning = false
+
+local function createEntityGui()
+	entityGui = Instance.new("ScreenGui")
+	entityGui.Name = "EntitySpawnerGui"
+	entityGui.ResetOnSpawn = false
+	entityGui.Parent = PlayerGui
+
+	local bg = Instance.new("Frame")
+	bg.Size = UDim2.fromScale(0.6,0.4)
+	bg.Position = UDim2.fromScale(0.5,0.5)
+	bg.AnchorPoint = Vector2.new(0.5,0.5)
+	bg.BackgroundColor3 = Color3.fromRGB(60,60,60)
+	bg.BorderSizePixel = 0
+	bg.Parent = entityGui
+	Instance.new("UICorner", bg).CornerRadius = UDim.new(0.05,0)
+
+	-- CLOSE
+	local close = Instance.new("TextButton")
+	close.Size = UDim2.fromScale(0.08,0.12)
+	close.Position = UDim2.fromScale(0.95,0.05)
+	close.AnchorPoint = Vector2.new(1,0)
+	close.Text = "X"
+	close.TextScaled = true
+	close.Font = Enum.Font.GothamBold
+	close.TextColor3 = Color3.fromRGB(255,255,255)
+	close.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	close.BorderSizePixel = 0
+	close.Parent = bg
+	Instance.new("UICorner", close).CornerRadius = UDim.new(0.3,0)
+
+	-- ENTITIES LIST
+	local listButton = Instance.new("TextButton")
+	listButton.Size = UDim2.fromScale(0.5,0.15)
+	listButton.Position = UDim2.fromScale(0.5,0.2)
+	listButton.AnchorPoint = Vector2.new(0.5,0.5)
+	listButton.Text = "Entities list"
+	listButton.TextScaled = true
+	listButton.Font = Enum.Font.GothamBold
+	listButton.TextColor3 = Color3.fromRGB(255,255,255)
+	listButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	listButton.BorderSizePixel = 0
+	listButton.Parent = bg
+	Instance.new("UICorner", listButton).CornerRadius = UDim.new(0.2,0)
+
+	-- TEXTBOX
+	local entityBox = Instance.new("TextBox")
+	entityBox.Size = UDim2.fromScale(0.8,0.18)
+	entityBox.Position = UDim2.fromScale(0.5,0.4)
+	entityBox.AnchorPoint = Vector2.new(0.5,0.5)
+	entityBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	entityBox.TextColor3 = Color3.fromRGB(255,255,255)
+	entityBox.Font = Enum.Font.GothamBold
+	entityBox.TextScaled = true
+	entityBox.PlaceholderText = "Enter the entity's name to spawn"
+	entityBox.ClearTextOnFocus = false
+	entityBox.Text = ""
+	entityBox.Parent = bg
+	Instance.new("UICorner", entityBox).CornerRadius = UDim.new(0.2,0)
+
+	-- SPAWN BUTTON
+	local spawnBtn = Instance.new("TextButton")
+	spawnBtn.Size = UDim2.fromScale(0.6,0.18)
+	spawnBtn.Position = UDim2.fromScale(0.5,0.7)
+	spawnBtn.AnchorPoint = Vector2.new(0.5,0.5)
+	spawnBtn.Text = "Spawn entity"
+	spawnBtn.TextScaled = true
+	spawnBtn.Font = Enum.Font.GothamBold
+	spawnBtn.TextColor3 = Color3.fromRGB(255,255,255)
+	spawnBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	spawnBtn.BorderSizePixel = 0
+	spawnBtn.Visible = false
+	spawnBtn.Parent = bg
+	Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0.2,0)
+
+	--------------------------------------------------
+	-- COOLDOWN DISPLAY
+	--------------------------------------------------
+	local function startCooldown()
+		cooldownRunning = true
+		spawnBtn.AutoButtonColor = false
+
+		for i = ENTITY_COOLDOWN, 1, -1 do
+			spawnBtn.Text = "Cooldown ("..i..")"
+			task.wait(1)
+		end
+
+		spawnBtn.Text = "Spawn entity"
+		spawnBtn.AutoButtonColor = true
+		cooldownRunning = false
+	end
+
+	--------------------------------------------------
+	-- LOGIC
+	--------------------------------------------------
+	entityBox:GetPropertyChangedSignal("Text"):Connect(function()
+		spawnBtn.Visible = entityBox.Text ~= ""
+	end)
+
+	spawnBtn.MouseButton1Click:Connect(function()
+	if cooldownRunning then return end
+
+	local name = entityBox.Text
+	local func = EntityList[name]
+
+	if func then
+		local success, err = pcall(func)
+		if success then
+			OnSpawnEntity(name)
+			task.spawn(startCooldown) -- ✅ cooldown CHỈ khi spawn thành công
+		end
+	else
+		OnInvalidEntity(name) -- ❌ KHÔNG cooldown
+	end
+end)
+
+	--------------------------------------------------
+	-- ENTITY LIST GUI
+	--------------------------------------------------
+	local function openEntityList()
+	if entityListFrame then entityListFrame:Destroy() end
+
+	entityListFrame = Instance.new("Frame")
+	entityListFrame.Size = UDim2.fromScale(0.7,0.7)
+	entityListFrame.Position = UDim2.fromScale(0.5,0.55)
+	entityListFrame.AnchorPoint = Vector2.new(0.5,0.5)
+	entityListFrame.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	entityListFrame.BorderSizePixel = 0
+	entityListFrame.Parent = bg
+	Instance.new("UICorner", entityListFrame).CornerRadius = UDim.new(0.08,0)
+
+	-- ❌ CLOSE
+	local listClose = Instance.new("TextButton")
+	listClose.Size = UDim2.fromScale(0.1, 0.1)
+	listClose.Position = UDim2.fromScale(0.98, 0.02)
+	listClose.AnchorPoint = Vector2.new(1, 0)
+	listClose.Text = "X"
+	listClose.TextScaled = true
+	listClose.Font = Enum.Font.GothamBold
+	listClose.TextColor3 = Color3.fromRGB(255,255,255)
+	listClose.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	listClose.BorderSizePixel = 0
+	listClose.Parent = entityListFrame
+	Instance.new("UICorner", listClose).CornerRadius = UDim.new(0.3,0)
+
+	listClose.MouseButton1Click:Connect(function()
+		entityListFrame:Destroy()
+		entityListFrame = nil
+	end)
+
+	-- SCROLL
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Size = UDim2.fromScale(0.95,0.85)
+	scroll.Position = UDim2.fromScale(0.5,0.55)
+	scroll.AnchorPoint = Vector2.new(0.5,0.5)
+	scroll.CanvasSize = UDim2.new(0,0,0,0)
+	scroll.ScrollBarImageTransparency = 0.3
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel = 0
+	scroll.Parent = entityListFrame
+
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0,8)
+	layout.Parent = scroll
+
+	-- ✅ FIX SCROLL
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+	end)
+
+	for name,_ in pairs(EntityList) do
+		local cell = Instance.new("TextButton")
+		cell.Size = UDim2.new(1,-10,0,40)
+		cell.Text = name
+		cell.TextScaled = true
+		cell.Font = Enum.Font.GothamBold
+		cell.TextColor3 = Color3.fromRGB(255,255,255)
+		cell.BackgroundColor3 = Color3.fromRGB(0,0,0)
+		cell.BorderSizePixel = 0
+		cell.Parent = scroll
+		Instance.new("UICorner", cell).CornerRadius = UDim.new(0.2,0)
+
+		cell.MouseButton1Click:Connect(function()
+			entityBox.Text = name
+			spawnBtn.Visible = true
+		end)
+	end
+end
+	listButton.MouseButton1Click:Connect(openEntityList)
+	close.MouseButton1Click:Connect(function()
+		entityGui:Destroy()
+		entityGui = nil
+	end)
+end
+
+--------------------------------------------------
+-- BUTTON / TOOL EVENTS
+--------------------------------------------------
+entitiesButton.MouseButton1Click:Connect(function()
+	if entityGui then entityGui:Destroy() end
+	createEntityGui()
+end)
+
+tool.Equipped:Connect(function()
+	entitiesButton.Visible = true
+end)
+
+tool.Unequipped:Connect(function()
+	entitiesButton.Visible = false
+	if entityGui then entityGui:Destroy() entityGui = nil end
+end)
+
+game:GetService("Players").LocalPlayer.Backpack["Slap Glove"].TextureId = "rbxassetid://17465852777"
