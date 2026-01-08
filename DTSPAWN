@@ -1,0 +1,121 @@
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("Spawning random entity...",true)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+--------------------------------------------------
+-- 🔴 CONFIG
+--------------------------------------------------
+local LOAD_DURATION = 5        -- thời gian chạy 0% → 100%
+local END_DELAY = 1            -- đợi thêm sau khi full
+local LOAD_SOUND_ID = 140049602451857 -- 🔊 SoundId (bạn tự gắn)
+--------------------------------------------------
+
+--------------------------------------------------
+-- GUI SETUP
+--------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TopProgressGui"
+gui.ResetOnSpawn = false
+gui.Parent = PlayerGui
+
+-- Thanh đen
+local background = Instance.new("Frame")
+background.Size = UDim2.fromScale(0.4, 0.05)
+background.Position = UDim2.fromScale(0.5, 0.08)
+background.AnchorPoint = Vector2.new(0.5, 0)
+background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+background.BorderSizePixel = 0
+background.Parent = gui
+
+local bgCorner = Instance.new("UICorner")
+bgCorner.CornerRadius = UDim.new(0.3, 0)
+bgCorner.Parent = background
+
+-- Thanh xanh (ban đầu 0%)
+local bar = Instance.new("Frame")
+bar.Size = UDim2.fromScale(0, 1)
+bar.Position = UDim2.fromScale(0, 0)
+bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+bar.BorderSizePixel = 0
+bar.Parent = background
+
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(0.3, 0)
+barCorner.Parent = bar
+
+-- Text %
+local label = Instance.new("TextLabel")
+label.Size = UDim2.fromScale(1, 1)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.Font = Enum.Font.GothamBold
+label.TextScaled = true
+label.Text = "0%"
+label.Parent = bar
+
+--------------------------------------------------
+-- 🔊 LOAD SOUND
+--------------------------------------------------
+
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://" .. LOAD_SOUND_ID
+sound.Volume = 1
+sound.Looped = false
+sound.PlaybackSpeed = 0.8
+sound.Parent = background
+sound:Play()
+
+--------------------------------------------------
+-- ⏳ PROGRESS LOGIC
+--------------------------------------------------
+
+local STEPS = 100
+local STEP_TIME = LOAD_DURATION / STEPS
+
+for i = 0, STEPS do
+    bar.Size = UDim2.fromScale(i / STEPS, 1)
+    label.Text = i .. "%"
+    task.wait(STEP_TIME)
+end
+
+--------------------------------------------------
+-- ⏲️ ĐỢI THÊM
+--------------------------------------------------
+task.wait(END_DELAY)
+
+--------------------------------------------------
+-- ❌ CLEAN UP (GUI + SOUND + STATE)
+--------------------------------------------------
+if sound then
+    sound:Stop()
+    sound:Destroy()
+end
+
+gui:Destroy()
+
+background = nil
+bar = nil
+label = nil
+sound = nil
+gui = nil
+
+print("Progress + sound finished & cleaned")
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(0, 0, 255)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("You just spawned 'Destructioner (Cizinuness)'!",true)
+local sound1 = Instance.new("Sound")
+sound1.Name = "Spawn"
+sound1.SoundId = "rbxassetid://9159270931"
+sound1.Volume = 1
+sound1.Parent = game.Workspace
+sound1:Play()
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Destructioner"))()
+
+wait(5)
+sound1:Destroy()
