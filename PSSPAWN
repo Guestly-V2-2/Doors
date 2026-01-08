@@ -115,7 +115,7 @@ sound1.Volume = 1
 sound1.Parent = game.Workspace
 sound1:Play()
 
-lloadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Painer"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Doors/refs/heads/main/Painer"))()
 
 wait(5)
 sound1:Destroy()
