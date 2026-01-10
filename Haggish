@@ -60,6 +60,8 @@ local entity = spawner.Create({
 
 entity:SetCallback("OnSpawned", function()
     print("Entity has spawned")
+workspace.Haggish.RushNew.Footsteps.Playing = false
+workspace.Haggish.RushNew.PlaySound.PlaybackSpeed = 0.1
 end)
 
 entity:SetCallback("OnStartMoving", function()
