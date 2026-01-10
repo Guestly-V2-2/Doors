@@ -7,7 +7,7 @@ local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Regul
 local entity = spawner.Create({
 	Entity = {
 		Name = "Haggish",
-		Asset = "rbxassetid://12304996805",
+		Asset = "rbxassetid://12798104115",
 		HeightOffset = 0
 	},
 	Lights = {
@@ -60,39 +60,6 @@ local entity = spawner.Create({
 
 entity:SetCallback("OnSpawned", function()
     print("Entity has spawned")
-wait(0.01)
-
-function GitAud(soundgit,filename)
-    SoundName=tostring(SoundName)
-    local url=soundgit
-    local FileName = filename
-    writefile(FileName..".mp3", game:HttpGet(url))
-    return (getcustomasset or getsynasset)(FileName..".mp3")
-end
-
-function CustomGitSound(soundlink, vol, filename)
-    local sound = Instance.new("Sound")
-    sound.SoundId = GitAud(soundlink, filename)
-    sound.Parent = workspace.Haggish.RushNew
-    sound.Volume = 2
-    sound.PlaybackSpeed = 1
-    sound.Name = "Custom2"
-    sound.Looped = true
-    sound.RollOffMaxDistance = 200
-    sound.RollOffMinDistance = 20
-   sound:Play()
-end
-
-CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/lv_0_20260110221013.mp3?raw=true", 1, " Ambi")
-
-workspace.Haggish.RushNew.Attachment.ParticleEmitter.Texture = "rbxassetid://137368772889728"
-workspace.Haggish.RushNew.Footsteps.Playing = false
-workspace.Haggish.RushNew.PlaySound.Playing = false
-workspace.Haggish.RushNew.Attachment.PointLight.Color = Color3.fromRGB(0, 0, 0)
-local two = workspace.Haggish.RushNew.Attachment:GetChildren()[4]
-two:Destroy()
-local one = workspace.Haggish.RushNew.Attachment:GetChildren()[3]
-one.Color = Color3.fromRGB(0, 255, 0)
 end)
 
 entity:SetCallback("OnStartMoving", function()
