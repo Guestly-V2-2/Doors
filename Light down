@@ -1,0 +1,66 @@
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = 1
+    sound.PlaybackSpeed = 1
+    sound.Name = "Lightdown"
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Doors/raw/refs/heads/main/XRecorder_Edited_20260110_02.mp3?raw=true", 1, " Down")
+
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 227, 163)
+require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("It seems the power went out.",true)
+
+game:GetService("Lighting").FogEnd = 70
+game:GetService("Lighting").FogStart = 70
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting, TweenInfo.new(3),{FogEnd = 13})
+TW:Play()
+
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting, TweenInfo.new(3),{FogStart = 0})
+TW:Play()
+
+wait(30)
+game.Workspace.Lightdown:Destroy()
+
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = 1
+    sound.PlaybackSpeed = 1
+    sound.Name = "Lightup"
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Doors/raw/refs/heads/main/XRecorder_Edited_20260110_03.mp3?raw=true", 1, " Up")
+
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting, TweenInfo.new(1.5),{FogEnd = 250})
+TW:Play()
+
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting, TweenInfo.new(1.5),{FogStart = 250})
+TW:Play()
+wait(7)
+game.Workspace.Lightup:Destroy()
