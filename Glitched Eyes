@@ -18,6 +18,8 @@ end
 
 CustomGitSound("https://github.com/Guestly-Second-Account/DOORS/raw/refs/heads/main/XRecorder_Edited_20260110_01.mp3?raw=true", 1, " Eyes")
 
+local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
+caption.TextColor3 = Color3.fromRGB(255, 227, 163)
 require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("Credits for Dreadmania for Eyes Spawner (Actually he didnt make it 😭)",true)
 local Kill = true
 local eye = game:GetObjects("rbxassetid://121121926426152")[1]
