@@ -1,0 +1,94 @@
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = 2
+    sound.PlaybackSpeed = 1
+    sound.Name = "Spawn"
+   sound:Play()
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20260111_01.mp3?raw=true", 1, " Spawn")
+
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+--// Player
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--// Character & Humanoid (safe)
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+--// State
+local vuno = true
+
+--// GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Admiration"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local red = Instance.new("ImageLabel")
+red.Name = "AdmirationMove"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1
+red.Image = "rbxassetid://116436211275451"
+red.ImageTransparency = 0
+red.Parent = screenGui
+
+--// Delay before check
+task.wait(1.5)
+
+--// Movement check loop
+task.spawn(function()
+	while vuno do
+		task.wait(0.1)
+
+		if humanoid.MoveDirection.Magnitude > 0 then
+
+			-- Kill player
+			humanoid.Health = 0
+
+			-- firesignal (executor only)
+			pcall(function()
+				firesignal(
+					ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+					{
+						"You died to who called Admiration",
+						"If it needs you to move then it wants to kill you",
+						"Don't let it fools you."
+					},
+					"Blue"
+				)
+			end)
+
+			-- Death cause
+			pcall(function()
+				ReplicatedStorage.GameStats["Player_" .. player.Name]
+					.Total.DeathCause.Value = "Admiration"
+			end)
+
+			break
+		end
+	end
+end)
+
+--// Cleanup
+task.wait(2)
+if playerGui:FindFirstChild("Admiration") then
+  vuno = false
+	playerGui.Admiration:Destroy()
+  game.Workspace.Spawn:Destroy()
+end
