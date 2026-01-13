@@ -1,0 +1,144 @@
+local spawner = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/Voor-Pr00/Fogroom/refs/heads/main/Wwwhyyyyil"
+))()
+
+local damages = true
+local attackEnabled = false
+
+local plr = game.Players.LocalPlayer
+local chr = plr.Character or plr.CharacterAdded:Wait()
+
+local entity = spawner.Create({
+	Entity = {
+		Name = "ee",
+		Asset = "rbxassetid://12192704363",
+		HeightOffset = 0
+	},
+	Lights = {
+		Flicker = { Enabled = false, Duration = 1 },
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = { Enabled = false },
+	CameraShake = {
+		Enabled = false,
+		Range = 100,
+		Values = {1.5, 20, 0.1, 1}
+	},
+	Movement = {
+		Speed = 0.001,
+		Delay = 0,
+		Reversed = false
+	},
+	Damage = {
+		Enabled = false
+	},
+	Crucifixion = {
+		Enabled = true,
+		Range = 60,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding",
+		Hints = {"Death","Hints","Go","Here"},
+		Cause = ""
+	}
+})
+
+-- ================= CALLBACK =================
+
+entity:SetCallback("OnSpawned", function()
+
+	local model = workspace:WaitForChild("ee", 5)
+	if not model then return end
+
+	local mainPart = model:FindFirstChildWhichIsA("BasePart")
+	if not mainPart then return end
+
+	-- ===== RANDOM SPAWN IN ROOM =====
+	local room = workspace.CurrentRooms
+		:FindFirstChild(game.ReplicatedStorage.GameData.LatestRoom.Value)
+
+	if room and room:FindFirstChild("Parts")
+		and room.Parts:FindFirstChild("Floor") then
+
+		local floor = room.Parts.Floor
+		local size = floor.Size
+
+		local offsetX = math.random(-size.X/2 + 2, size.X/2 - 2)
+		local offsetZ = math.random(-size.Z/2 + 2, size.Z/2 - 2)
+
+		mainPart.CFrame =
+			floor.CFrame
+			* CFrame.new(offsetX, 5, offsetZ)
+	end
+
+	-- ===== RN FIX (GIỮ 1 POINTLIGHT) =====
+	local rn = model:FindFirstChild("RushNew")
+	if rn then
+		if rn:FindFirstChild("Footsteps") then rn.Footsteps:Destroy() end
+		if rn:FindFirstChild("PlaySound") then rn.PlaySound:Destroy() end
+
+		local att = rn:FindFirstChild("Attachment")
+		if att then
+			local keptLight
+			for _,v in ipairs(att:GetChildren()) do
+				if v:IsA("PointLight") then
+					if not keptLight then
+						keptLight = v
+					else
+						v:Destroy()
+					end
+				end
+			end
+			if keptLight then
+				keptLight.Color = Color3.fromRGB(255, 3, 141)
+				keptLight.Range = 15
+				keptLight.Brightness = 1
+			end
+		end
+	end
+
+	-- ===== DELAY ATTACK =====
+	task.delay(1.5, function()
+		attackEnabled = true
+	end)
+
+	-- ===== ROOM CHECK + DAMAGE =====
+	local startRoom = game.ReplicatedStorage.GameData.LatestRoom.Value
+
+	task.spawn(function()
+		while damages do
+			task.wait(1.2)
+
+			if attackEnabled then
+				local _, visible =
+					workspace.CurrentCamera:WorldToViewportPoint(mainPart.Position)
+
+				if not visible and plr.Character
+					and plr.Character:FindFirstChild("Humanoid") then
+					plr.Character.Humanoid:TakeDamage(10)
+				end
+
+				if plr.Character
+					and plr.Character:FindFirstChild("Humanoid")
+					and plr.Character.Humanoid.Health <= 0 then
+					game.ReplicatedStorage.GameStats
+					["Player_"..plr.Name]
+					.Total.DeathCause.Value = "Greed"
+				end
+			end
+
+			if game.ReplicatedStorage.GameData.LatestRoom.Value ~= startRoom then
+				damages = false
+				model:Destroy()
+				break
+			end
+		end
+	end)
+
+end)
+
+-- ================= RUN =================
+
+entity:Run()
