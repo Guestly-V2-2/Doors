@@ -15,7 +15,7 @@ local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Regul
 local entity = spawner.Create({
 	Entity = {
 		Name = "Trauma",
-		Asset = "rbxassetid://12798104115",
+		Asset = "rbxassetid://16957473352",
 		HeightOffset = 0
 	},
 	Lights = {
@@ -68,15 +68,6 @@ local entity = spawner.Create({
 
 entity:SetCallback("OnSpawned", function()
     print("Entity has spawned")
-workspace.Trauma.RushNew.Footsteps.Playing = false
-workspace.Trauma.RushNew.PlaySound.PlaybackSpeed = 0.05
-workspace.Trauma.RushNew.Attachment.BlackTrail:Destroy()
-workspace.Trauma.RushNew.Attachment.PointLight.Color = Color3.fromRGB(255, 0, 0)
-local light2 = workspace.Trauma.RushNew.Attachment:GetChildren()[5]
-light2.Color = Color3.fromRGB(255, 0, 0)
-local light3 = workspace.Trauma.RushNew.Attachment:GetChildren()[4]
-light3.Color = Color3.fromRGB(255, 0, 0)
-workspace.Trauma.RushNew.Attachment.ParticleEmitter.Texture = "rbxassetid://102085323336237"
 end)
 
 entity:SetCallback("OnStartMoving", function()
