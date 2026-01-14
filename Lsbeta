@@ -1,0 +1,257 @@
+--==================================================
+-- LIGHTSHAKER ENTITY - FULL ORIGINAL LOGIC (FIXED)
+--==================================================
+
+------------------ LOCKED ROOM CHECK ----------------
+local function IsLockedRoom()
+    local roomId = game.ReplicatedStorage.GameData.LatestRoom.Value
+    local room = workspace.CurrentRooms:FindFirstChild(roomId)
+    if not room then return false end
+
+    if room:FindFirstChild("KeyObtain", true) then
+        return true
+    end
+
+    local door = room:FindFirstChild("Door", true)
+    if door and door:FindFirstChild("RequiresKey") then
+        return door.RequiresKey.Value == true
+    end
+
+    return false
+end
+
+if IsLockedRoom() then
+    warn("[Lightshaker] Locked room → cancel spawn")
+    return
+end
+
+------------------ SOUND ------------------
+function GitAud(soundgit, filename)
+    local FileName = filename
+    writefile(FileName .. ".mp3", game:HttpGet(soundgit))
+    return (getcustomasset or getsynasset)(FileName .. ".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = vol or 2
+    sound.PlaybackSpeed = 1
+    sound.Name = "Counting"
+    sound:Play()
+end
+
+CustomGitSound(
+    "https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20260114_05%20(1).mp3?raw=true",
+    2,
+    "Lightshaker_Counting"
+)
+
+------------------ LIGHTING ------------------
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+
+Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255,255,0)
+
+------------------ ENTITY ------------------
+local spawner = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/Voor-Pr00/Fogroom/refs/heads/main/Wwwhyyyyil"
+))()
+
+local player = game.Players.LocalPlayer
+local damages = true
+local ACTIVE = true
+local START_TIME = tick()
+
+_G.OnLightshakerKill = _G.OnLightshakerKill or function() end
+
+local entity = spawner.Create({
+    Entity = {
+        Name = "Lightshaker",
+        Asset = "rbxassetid://107939368264641",
+        HeightOffset = 0
+    },
+
+    Lights = {
+        Flicker = { Enabled = false },
+        Shatter = false,
+        Repair = false
+    },
+
+Movement = {
+    Enabled = false,
+    Speed = 0.001,
+    Delay = math.huge
+},
+
+Earthquake = {
+    Enabled = false
+},
+
+CameraShake = {
+    Enabled = false
+},
+
+    Damage = {
+        Enabled = false,
+        Range = 40,
+        Amount = 125
+    },
+
+    Death = {
+        Type = "Guiding",
+        Hints = {
+            "Well..",
+            "I know what happened.",
+            "You died to a very annoying entity.",
+            "You should have been faster than that.",
+            "Can you do it? I believe in you."
+        },
+        Cause = "Lightshaker"
+    }
+})
+
+------------------ ON SPAWN ------------------
+entity:SetCallback("OnSpawned", function()
+game.Workspace.Lightshaker.greed.Attachment.PointLight.Enabled = false
+
+    -------- PREVENT LIGHT BREAK --------
+    task.spawn(function()
+        while ACTIVE do
+            for _, room in ipairs(workspace.CurrentRooms:GetChildren()) do
+                for _, obj in ipairs(room:GetDescendants()) do
+                    if obj:IsA("PointLight")
+                    or obj:IsA("SurfaceLight")
+                    or obj:IsA("SpotLight") then
+                        obj.Enabled = true
+                    end
+                end
+            end
+            task.wait(0.4)
+        end
+    end)
+
+    -------- FACE SWAP --------
+    local Textures = {
+        "rbxassetid://91207064517129",
+        "rbxassetid://125879637567921",
+        "rbxassetid://101719063393555",
+        "rbxassetid://106422062721387"
+    }
+
+    local emitter = workspace
+        :WaitForChild("Lightshaker")
+        :WaitForChild("greed")
+        :WaitForChild("Attachment")
+        :WaitForChild("ParticleEmitter")
+
+    task.spawn(function()
+        local i = 1
+        while ACTIVE do
+            emitter.Texture = Textures[i]
+            i = (i % #Textures) + 1
+            task.wait(0.05)
+        end
+    end)
+
+    -------- POSITION --------
+    local model = workspace.Lightshaker
+    local part = model:FindFirstChildWhichIsA("BasePart")
+    part.CFrame =
+        workspace.CurrentRooms:GetChildren()
+        [#workspace.CurrentRooms:GetChildren() - 1]
+        .Parts.Floor.CFrame + Vector3.new(0,8,0)
+
+    -------- ROOM CHANGE --------
+    game.ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Workspace.Counting, TweenInfo.new(3),{PlaybackSpeed = 0})
+TW:Play()
+        ACTIVE = false
+        damages = false
+
+        Lighting.MainColorCorrection.Contrast = 0.01
+        TweenService:Create(
+            Lighting.MainColorCorrection,
+            TweenInfo.new(2.5),
+            { Contrast = 0 }
+        ):Play()
+
+        TweenService:Create(
+            Lighting.MainColorCorrection,
+            TweenInfo.new(2),
+            { TintColor = Color3.fromRGB(255,255,255) }
+        ):Play()
+
+        if model then model:Destroy() end
+    end)
+
+    -------- TIMER (12s DEATH) --------
+    task.spawn(function()
+        while ACTIVE do
+            if tick() - START_TIME >= 12 and damages then
+                ACTIVE = false
+                damages = false
+
+                -- Death Hint (gốc)
+                firesignal(
+                    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+                    entity.Config.Death.Hints,
+                    "Blue"
+                )
+
+                -- Set DeathCause gốc
+                local stats = game.ReplicatedStorage.GameStats
+                local stat = stats:FindFirstChild("Player_" .. player.Name)
+                if stat and stat:FindFirstChild("Total") then
+                    stat.Total.DeathCause.Value = "Lightshaker"
+                end
+
+                -- Kill bằng damage framework
+                entity.Config.Damage.Enabled = true
+                task.wait(0.15)
+                entity.Config.Damage.Enabled = false
+
+                pcall(function()
+                    _G.OnLightshakerKill(player, "Stayed too long in room")
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Flashbang"
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true
+
+local red = Instance.new("ImageLabel")
+red.Name = "Flashing"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1 -- Make the background fully transparent
+red.Image = "rbxassetid://99069503636713" -- Set the image using a random Image ID
+red.ImageTransparency = 1
+red.Parent = screenGui
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Flashbang.Flashing, TweenInfo.new(2.5),{ImageTransparency = 0})
+TW:Play()
+wait(4)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Flashbang.Flashing, TweenInfo.new(3),{ImageTransparency = 1})
+TW:Play()
+wait(4)
+game.Players.LocalPlayer.PlayerGui.Flashbang:Destroy()
+                end)
+
+                if model then model:Destroy() end
+                break
+            end
+            task.wait(0.2)
+        end
+    end)
+
+end)
+
+------------------ RUN ------------------
+entity:Run()
+
+wait(30)
+game.Workspace.Counting:Destroy()
