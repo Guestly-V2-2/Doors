@@ -1,0 +1,7 @@
+local pl = game.Players.LocalPlayer.Character
+        local animation = Instance.new("Animation")
+        animation.AnimationId = "rbxassetid://18759987341"
+
+fallen = pl:FindFirstChildOfClass('Humanoid'):LoadAnimation(animation)
+
+fallen:Play()
