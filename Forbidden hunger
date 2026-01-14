@@ -1,0 +1,82 @@
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+if game.ReplicatedStorage.GameData.LatestRoom.Value == 50 then
+
+---====== Load spawner ======---
+
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/VoorPhale012/Fogroom/refs/heads/main/Chat"))() 
+
+---====== Create entity ======---
+
+local entity = spawner.Create({
+	Entity = {
+		Name = "Hunger",
+		Asset = "rbxassetid://15104414692",
+		HeightOffset = 1
+	},
+	Lights = {
+		Flicker = {
+			Enabled = true,
+			Duration = 2
+		},
+		Shatter = true,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = false,
+		Range = 100,
+		Values = {1.5, 20, 0.1, 1} -- Magnitude, Roughness, FadeIn, FadeOut
+	},
+	Movement = {
+		Speed = 45,
+		Delay = 5,
+		Reversed = true
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 4,
+		Max = 4,
+		Delay = 0.01
+	},
+	Damage = {
+		Enabled = true,
+		Range = 10,
+		Amount = 0.01
+	},
+	Crucifixion = {
+		Enabled = false,
+		Range = 100,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding", -- "Curious"
+		Hints = {"Death", "Hints", "Go", "Here"},
+		Cause = ""
+	}
+})
+
+---====== Debug entity ======---
+
+entity:SetCallback("OnSpawned", function()
+    print("Entity has spawned")
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+game.Workspace.CommonSense:Destroy()
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth == 0 then
+		print("Entity has killed the player")
+	else
+		print("Entity has damaged the player")
+		game.Players.LocalPlayer.Character.Humanoid:TakeDamage(100)
+        game:GetService("ReplicatedStorage").GameStats["Player_".. game.Players.LocalPlayer.Name].Total.DeathCause.Value = "Hunger"
+	end
+end)
+---====== Run entity ======---
+entity:Run()
+end
+end)
