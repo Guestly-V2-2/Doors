@@ -1,0 +1,214 @@
+-- ===== SERVICES =====
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+
+-- ===== LOAD MODEL =====
+local function LoadCustomInstance(source, parent)
+    local model
+    while not model do
+        local success, result = pcall(function()
+            local file = "temp_"..math.random(1,999999)..".rbxm"
+            writefile(file, game:HttpGet(source))
+            local obj = game:GetObjects((getcustomasset or getsynasset)(file))[1]
+            delfile(file)
+            return obj
+        end)
+        if success and result then
+            model = result
+            model.Parent = parent
+            for _,v in ipairs(model:GetDescendants()) do
+                if v:IsA("Script") or v:IsA("LocalScript") then
+                    v:Destroy()
+                end
+            end
+        end
+        task.wait()
+    end
+    return model
+end
+
+-- ===== GET ROOM =====
+local function GetLastRoom()
+    local rooms = Workspace.CurrentRooms:GetChildren()
+    return rooms[#rooms - 1]
+end
+
+-- ===== SPAWN ENTITY =====
+local model = LoadCustomInstance(
+    "https://github.com/uknowiejiekeeowowowoeeo/A/raw/main/ThE%20FaLlEn.rbxm",
+    Workspace
+)
+
+local entity = model:FindFirstChildWhichIsA("BasePart")
+entity.Anchored = true
+entity.CanCollide = false
+
+local room = GetLastRoom()
+local floor = room.Parts.Floor
+local heightOffset = 3
+entity.CFrame = floor.CFrame + Vector3.new(0, heightOffset, 0)
+
+-- ===== LIGHTING =====
+local cc = Instance.new("ColorCorrectionEffect")
+cc.TintColor = Color3.fromRGB(160, 0, 255)
+cc.Contrast = 0.25
+cc.Parent = Lighting
+
+-- ===== SOUND =====
+local fireSound = Instance.new("Sound")
+fireSound.SoundId = "rbxassetid://140146808163329"
+fireSound.Volume = 3
+fireSound.RollOffMaxDistance = 120
+fireSound.Parent = entity
+
+-- ===== FIRE RING SETTINGS =====
+local minRadius = 1
+local maxRadius = 70
+local duration = 2
+local partCount = 250
+local fireHeight = 2
+local fireSize = Vector3.new(0.3, 1, 1)
+
+local running = true
+local fireParts = {}
+
+-- ===== CREATE FIRE RING =====
+local function CreateFireRing()
+    fireSound:Play()
+
+    local ring = {}
+
+    for i = 1, partCount do
+        local angle = (i / partCount) * math.pi * 2
+
+        local p = Instance.new("Part")
+        p.Size = fireSize
+        p.Anchored = true
+        p.CanCollide = false
+        p.Transparency = 1
+        p.Parent = Workspace
+
+        local fire = Instance.new("Fire")
+        fire.Size = 6
+        fire.Heat = 15
+        fire.Color = Color3.fromRGB(200,0,255)
+        fire.SecondaryColor = Color3.fromRGB(150,0,200)
+        fire.Parent = p
+
+        table.insert(ring, {part = p, angle = angle})
+        table.insert(fireParts, p)
+    end
+
+    local start = tick()
+    local conn
+    conn = RunService.RenderStepped:Connect(function()
+        if not running then
+            conn:Disconnect()
+            return
+        end
+
+        local t = math.clamp((tick() - start) / duration, 0, 1)
+        local radius = minRadius + (maxRadius - minRadius) * t
+
+        for _,data in ipairs(ring) do
+            local x = math.cos(data.angle) * radius
+            local z = math.sin(data.angle) * radius
+
+            data.part.Position = Vector3.new(
+                entity.Position.X + x,
+                floor.Position.Y + fireHeight,
+                entity.Position.Z + z
+            )
+
+            -- DAMAGE + PUSH
+            for _,plr in ipairs(Players:GetPlayers()) do
+                local char = plr.Character
+                local hum = char and char:FindFirstChild("Humanoid")
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+                if hum and hrp then
+                    if (hrp.Position - data.part.Position).Magnitude <= 2.5 then
+                        hum:TakeDamage(0.2)
+
+firesignal(
+    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+    {
+        "You died to who called The Fallen..",
+        "Hm.. who is him..?",
+        "Sorry but you have to figure it our yourself. Good luck."
+    },
+    "Blue"
+)
+
+                        -- ===== DEATH CAUSE =====
+                        game.ReplicatedStorage.GameStats[
+                            "Player_" .. plr.Name
+                        ].Total.DeathCause.Value = "tHe FaLlEn"
+
+                        -- PUSH SCRIPT
+                        local pushDistance = 3
+                        local pushTime = 0.25
+                        local direction = -hrp.CFrame.LookVector
+
+                        local rayParams = RaycastParams.new()
+                        rayParams.FilterDescendantsInstances = {char}
+                        rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                        rayParams.IgnoreWater = true
+
+                        local rayResult = Workspace:Raycast(
+                            hrp.Position,
+                            direction * pushDistance,
+                            rayParams
+                        )
+
+                        local finalDistance = pushDistance
+                        if rayResult then
+                            finalDistance = (rayResult.Position - hrp.Position).Magnitude - 1
+                            if finalDistance < 0 then
+                                finalDistance = 0
+                            end
+                        end
+
+                        TweenService:Create(
+                            hrp,
+                            TweenInfo.new(pushTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                            {CFrame = hrp.CFrame + direction * finalDistance}
+                        ):Play()
+                    end
+                end
+            end
+        end
+
+        if t >= 1 then
+            for _,d in ipairs(ring) do
+                d.part:Destroy()
+            end
+            conn:Disconnect()
+        end
+    end)
+end
+
+-- ===== LOOP =====
+task.spawn(function()
+    while running do
+        CreateFireRing()
+        task.wait(duration)
+    end
+end)
+
+-- ===== hả =====
+Workspace.CurrentRooms.ChildAdded:Connect(function()
+    running = false
+
+    for _,p in ipairs(fireParts) do
+        if p and p.Parent then
+            p:Destroy()
+        end
+    end
+
+    if model then model:Destroy() end
+    if cc then cc:Destroy() end
+end)
