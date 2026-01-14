@@ -1,0 +1,166 @@
+-------------------------------------------------
+-- SERVICES
+-------------------------------------------------
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-------------------------------------------------
+-- PLAYER
+-------------------------------------------------
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local root = char:WaitForChild("HumanoidRootPart")
+
+-------------------------------------------------
+-- MAIN_GAME MODULE (Doors)
+-------------------------------------------------
+local mainGameModule = player.PlayerGui:WaitForChild("MainUI",10)
+    :WaitForChild("Initiator",10)
+    :FindFirstChild("Main_Game")
+
+local function showCaption(text)
+	if mainGameModule then
+		local success, mainGame = pcall(require, mainGameModule)
+		if success and mainGame and mainGame.caption then
+			mainGame.caption("<font color='#b45aff'>"..text.."</font>", true)
+		end
+	end
+end
+
+local function clearCaption()
+	if mainGameModule then
+		local success, mainGame = pcall(require, mainGameModule)
+		if success and mainGame and mainGame.caption then
+			mainGame.caption("", true)
+		end
+	end
+end
+
+-------------------------------------------------
+-- LOAD ENTITY MODEL
+-------------------------------------------------
+local MODEL_ID = "rbxassetid://132363623476878"
+local HEIGHT = 5
+
+local entity = game:GetObjects(MODEL_ID)[1]
+entity.Parent = Workspace
+
+if not entity.PrimaryPart then
+	for _,v in pairs(entity:GetDescendants()) do
+		if v:IsA("BasePart") then
+			entity.PrimaryPart = v
+			break
+		end
+	end
+end
+
+local rooms = Workspace.CurrentRooms:GetChildren()
+local entityRoom = rooms[#rooms-1]
+entity:SetPrimaryPartCFrame(entityRoom.Parts.Floor.CFrame + Vector3.new(0, HEIGHT, 0))
+
+-- FADE IN ENTITY
+for _,v in pairs(entity:GetDescendants()) do
+	if v:IsA("BasePart") then
+		v.Transparency = 1
+		TweenService:Create(v, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency=1}):Play()
+	end
+end
+
+-------------------------------------------------
+-- ROOM MONITORING
+-------------------------------------------------
+local GameData = ReplicatedStorage:WaitForChild("GameData")
+local LatestRoom = GameData:WaitForChild("LatestRoom")
+local playerHasLeftRoom = false
+
+LatestRoom.Changed:Connect(function()
+	if LatestRoom.Value ~= entityRoom then
+		playerHasLeftRoom = true
+		if entity and entity.Parent then
+			entity:Destroy()
+		end
+		clearCaption()
+	end
+end)
+
+-------------------------------------------------
+-- MONITOR MOVEMENT (CÓ CHECK FLAG NGAY TRONG LOOP)
+-------------------------------------------------
+local function monitorMovement(duration, mustMove)
+	local reactionTime = 0.7
+	local startTime = tick()
+	local lastPos = root.Position
+	local interval = 0.5
+
+	while tick() - startTime < duration do
+		if playerHasLeftRoom then
+			-- Dừng ngay lập tức khi qua cửa
+			break
+		end
+
+		local currentPos = root.Position
+		local dist = (currentPos - lastPos).Magnitude
+
+		if tick() - startTime > reactionTime then
+			if mustMove then
+				if dist <= 0.35 then
+					humanoid:TakeDamage(10)
+firesignal(
+    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+    {
+        "Hm..",
+        "That entity, Trun.",
+        "He is pretty smart, can you beat him?"
+    },
+    "Blue"
+)
+
+game.ReplicatedStorage.GameStats["Player_" .. game.Players.LocalPlayer.Name]
+    .Total.DeathCause.Value = "Trun"
+				end
+			else
+				if dist > 0.35 then
+					humanoid:TakeDamage(10)
+firesignal(
+    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+    {
+        "Hm..",
+        "That entity, Trun.",
+        "He is pretty smart, can you beat him?"
+    },
+    "Blue"
+)
+
+game.ReplicatedStorage.GameStats["Player_" .. game.Players.LocalPlayer.Name]
+    .Total.DeathCause.Value = "Trun"
+				end
+			end
+			lastPos = currentPos
+		end
+
+		task.wait(interval)
+	end
+end
+
+-------------------------------------------------
+-- MAIN LOOP
+-------------------------------------------------
+while not playerHasLeftRoom do
+	showCaption("DON'T MOVE")
+	monitorMovement(5, false)
+	if playerHasLeftRoom then break end
+
+	clearCaption()
+	task.wait(1)
+	if playerHasLeftRoom then break end
+
+	showCaption("MOVE")
+	monitorMovement(5, true)
+	if playerHasLeftRoom then break end
+
+	clearCaption()
+	task.wait(1)
+end
