@@ -289,7 +289,6 @@ gui:Destroy()
 if sound1 then sound1:Destroy() end
 if sound2 then sound2:Destroy() end
 
-wait(1)
 humanoid:TakeDamage(100)
 
 -- ================= DEATH HINT =================
