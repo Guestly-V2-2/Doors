@@ -1,0 +1,263 @@
+function GitAud(soundgit,filename)
+    SoundName=tostring(SoundName)
+    local url=soundgit
+    local FileName = filename
+    writefile(FileName..".mp3", game:HttpGet(url))
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+function CustomGitSound(soundlink, vol, filename)
+    local sound = Instance.new("Sound")
+    sound.SoundId = GitAud(soundlink, filename)
+    sound.Parent = workspace
+    sound.Volume = 5
+    sound.PlaybackSpeed = 1
+    sound.Name = "A60Jump"
+end
+
+CustomGitSound("https://github.com/Guestly-V2-2/Music-Sound/raw/refs/heads/main/XRecorder_Edited_20260114_04.mp3?raw=true", 1, " a60")
+
+---====== Load spawner ======---
+
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua"))()
+
+---====== Create entity ======---
+
+local entity = spawner.Create({
+	Entity = {
+		Name = "UNKNOWN-60",
+		Asset = "rbxassetid://12797548771",
+		HeightOffset = 0
+	},
+	Lights = {
+		Flicker = {
+			Enabled = true,
+			Duration = 5
+		},
+		Shatter = true,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 300,
+		Values = {8, 9, 8, 9} -- Magnitude, Roughness, FadeIn, FadeOut
+	},
+	Movement = {
+		Speed = 350,
+		Delay = 36,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush", -- "Blitz"
+		Min = 10,
+		Max = 15,
+		Delay = 2
+	},
+	Damage = {
+		Enabled = true,
+		Range = 40,
+		Amount = 0.01
+	},
+	Crucifixion = {
+		Enabled = false,
+		Range = 40,
+		Resist = true,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding", -- "Curious"
+		Hints = {"You died to an entity called Threat..", "It looks like Ambush but more terrible", "Do what you learnt from Ambush", "Good luck."},
+		Cause = ""
+	}
+})
+
+---====== Debug entity ======---
+
+entity:SetCallback("OnSpawned", function()
+    print("Entity has spawned")
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0.01
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(4),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
+end)
+
+entity:SetCallback("OnStartMoving", function()
+    print("Entity has started moving")
+end)
+
+entity:SetCallback("OnEnterRoom", function(room, firstTime)
+    if firstTime == true then
+        print("Entity has entered room: ".. room.Name.. " for the first time")
+    else
+        print("Entity has entered room: ".. room.Name.. " again")
+    end
+end)
+
+entity:SetCallback("OnLookAt", function(lineOfSight)
+	if lineOfSight == true then
+		print("Player is looking at entity")
+	else
+		print("Player view is obstructed by something")
+	end
+end)
+
+entity:SetCallback("OnRebounding", function(startOfRebound)
+    if startOfRebound == true then
+        print("Entity has started rebounding")
+	else
+        print("Entity has finished rebounding")
+	end
+end)
+
+entity:SetCallback("OnDespawning", function()
+    print("Entity is despawning")
+end)
+
+entity:SetCallback("OnDespawned", function()
+    print("Entity has despawned")
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth == 0 then
+		print("Entity has killed the player")
+else
+		print("Entity has damaged the player")
+game.Workspace.A60Jump:Play()
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255, 0, 0)
+--// SERVICES
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+--// CLEAN OLD
+pcall(function()
+	if CoreGui:FindFirstChild("JumpscareGui") then
+		CoreGui.JumpscareGui:Destroy()
+	end
+end)
+
+--// CONFIG
+local Faces = {
+	"rbxassetid://11287256498",
+	"rbxassetid://12532482993",
+	"rbxassetid://11278626246",
+	"rbxassetid://11558483235",
+	"rbxassetid://11546101970",
+	-- 👉 bạn thêm bao nhiêu mặt cũng được
+}
+
+local SWITCH_INTERVAL = 0.1      -- đổi mặt mỗi 0.1s
+local STATIC_DURATION = 1.5      -- tổng thời gian đổi mặt
+local FINAL_ZOOM_TIME = 1        -- zoom mặt cuối
+local FINAL_FADE_TIME = 1        -- fade out
+
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "JumpscareGui"
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = CoreGui
+
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.new(0, 0, 0)
+bg.BackgroundTransparency = 1
+bg.BorderSizePixel = 0
+bg.ZIndex = 999
+bg.Parent = gui
+
+local face = Instance.new("ImageLabel")
+face.AnchorPoint = Vector2.new(0.5, 0.5)
+face.Position = UDim2.new(0.5, 0, 0.5, 0)
+face.Size = UDim2.new(0, 300, 0, 300)
+face.BackgroundTransparency = 1
+face.ImageTransparency = 0
+face.ResampleMode = Enum.ResamplerMode.Pixelated
+face.Parent = bg
+
+--// STATIC FACE LOOP (NO ZOOM)
+local elapsed = 0
+local index = 1
+
+while elapsed < STATIC_DURATION and gui.Parent do
+	face.Image = Faces[index]
+	index += 1
+	if index > #Faces then
+		index = 1
+	end
+
+	task.wait(SWITCH_INTERVAL)
+	elapsed += SWITCH_INTERVAL
+end
+
+--// FINAL FACE (LAST SHOWN)
+face.Image = Faces[index - 1] or Faces[#Faces]
+
+--// FINAL ZOOM + FADE
+local screenY = gui.AbsoluteSize.Y
+local zoomTween = TweenService:Create(
+	face,
+	TweenInfo.new(FINAL_ZOOM_TIME, Enum.EasingStyle.Linear),
+	{ Size = UDim2.new(0, screenY * 2.5, 0, screenY * 2.5) }
+)
+
+humanoid:TakeDamage(100)
+
+local fadeTween = TweenService:Create(
+	face,
+	TweenInfo.new(FINAL_FADE_TIME, Enum.EasingStyle.Linear),
+	{ ImageTransparency = 1 }
+)
+
+zoomTween:Play()
+	fadeTween:Play()
+
+task.wait(math.max(FINAL_ZOOM_TIME, FINAL_FADE_TIME))
+
+--// CLEANUP ALL STATE
+gui:Destroy()
+Faces = nil
+zoomTween = nil
+fadeTween = nil
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255, 255, 255)
+
+-- ================= DEATH HINT =================
+firesignal(
+    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+    {
+        "You died to who called UNKNOWN-60..",
+        "When he appears, the lights turn red for a while",
+        "Just do what you learnt from Ambush. Good luck."
+    },
+    "Blue"
+)
+
+game.ReplicatedStorage.GameStats["Player_" .. player.Name]
+    .Total.DeathCause.Value = "UNKNOWN-60"
+ end
+end)
+
+--[[
+
+DEVELOPER NOTE:
+By overwriting 'CrucifixionOverwrite' the default crucifixion callback will be replaced with your custom callback.
+
+entity:SetCallback("CrucifixionOverwrite", function()
+    print("Custom crucifixion callback")
+end)
+
+]]--
+
+---====== Run entity ======---
+
+entity:Run()
