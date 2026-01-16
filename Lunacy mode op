@@ -85,8 +85,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Guestly-V2-2/Random-S
 
 game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("<font color='#9400ff'>[Lunacy Mode]: Script Succesfully Executed/Loaded.</font>")
 
-game.ReplicatedStorage.ModulesClient.Name = "ClientModules"
-
 -- Intro
 game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
 local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
@@ -118,8 +116,6 @@ end)()
 -- Động đất bủn tím
 coroutine.wrap(function()
     while true do
-        wait()
-        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
         wait(0)
 
 if game.Workspace:FindFirstChild("RushMoving") then
