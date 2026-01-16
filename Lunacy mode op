@@ -1,3 +1,60 @@
+-- Hàm tải âm thanh từ GitHub
+function GitAud(soundlink, filename)
+    local url = soundlink
+    local FileName = filename
+    if not isfile(FileName..".mp3") then
+        writefile(FileName..".mp3", game:HttpGet(url))
+    end
+    return (getcustomasset or getsynasset)(FileName..".mp3")
+end
+
+-- Hàm phát âm thanh custom từ GitHub (LOOP)
+function CustomGitSound(soundlink, vol, filename)
+    local Sound = Instance.new("Sound")
+    Sound.SoundId = GitAud(soundlink, filename)
+    Sound.Parent = workspace
+    Sound.Volume = vol
+    Sound.Looped = true
+    Sound:Play()
+    return Sound
+end
+
+-- ===== Logic phát nhạc cửa đầu tiên =====
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GameData = ReplicatedStorage:WaitForChild("GameData")
+
+local played = false
+local musicSound = nil
+
+GameData.LatestRoom:GetPropertyChangedSignal("Value"):Connect(function()
+    if played then return end
+    if GameData.LatestRoom.Value >= 1 then
+        played = true
+        musicSound = CustomGitSound(
+            "https://raw.githubusercontent.com/VoorPhale012/spawnnn/refs/heads/main/Lunacy%20Ambient%20Music.mp3",
+            2,
+            "LunacyAmbient"
+        )
+    end
+end)
+
+-- ===== Tắt nhạc khi Rush xuất hiện =====
+coroutine.wrap(function()
+    while true do
+        GameData.LatestRoom.Changed:Wait()
+        wait(0)
+
+        if workspace:FindFirstChild("RushMoving") then
+            if musicSound then
+                musicSound:Stop()
+                musicSound:Destroy()
+                musicSound = nil
+            end
+            break
+        end
+    end
+end)()
+
 local caption = game.Players.LocalPlayer:WaitForChild("PlayerGui").MainUI.MainFrame.Caption
 caption.TextColor3 = Color3.fromRGB(169, 3, 252)
 require(game.Players.LocalPlayer.PlayerGui.MainUI.Initiator.Main_Game).caption("Lunacy Mode Remade Actived!",true)
