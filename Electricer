@@ -15,6 +15,7 @@ local DAMAGE = 35
 local LOOK_TIME_REQUIRED = 2
 local SINK_SPEED = 25
 local DRAIN_SOUND_ID = "rbxassetid://9041752524"
+local NOT_LOOK_TIME_REQUIRED = 2 -- 2 giây không nhìn thì biến mất
 
 -------------------------------------------------
 -- HOOK EVENTS (GỘP TẠI ĐÂY)
@@ -181,18 +182,29 @@ local monster = spawnInFront(MODEL_ID, 10, 3, -2)
 
 if monster then
 	local lookTime = 0
+	local notLookTime = 0
 
 	while monster.Parent do
 		task.wait(0.1)
 
 		if isLookingAt(monster) then
 			lookTime += 0.1
+			notLookTime = 0
+
+			-- Nhìn đủ lâu → tấn công
 			if lookTime >= LOOK_TIME_REQUIRED then
 				dashAndDrain(monster)
 				break
 			end
 		else
+			notLookTime += 0.1
 			lookTime = 0
+
+			-- ❌ Không nhìn quá 2 giây → chui xuống đất + destroy
+			if notLookTime >= NOT_LOOK_TIME_REQUIRED then
+				sinkIntoGround(monster)
+				break
+			end
 		end
 	end
 end
