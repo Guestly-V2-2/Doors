@@ -789,3 +789,28 @@ task.spawn(function()
         task.wait(CHECK_DELAY)
     end
 end)
+
+wait(50)
+-- One-time execute guard
+if getgenv()._SCRIPT_ALREADY_EXECUTED then
+    warn("[SCRIPT] Script đã được chạy trước đó, từ chối execute!")
+    return
+end
+
+getgenv()._SCRIPT_ALREADY_EXECUTED = true
+
+-- ======================
+-- SCRIPT CHÍNH BẮT ĐẦU Ở ĐÂY
+-- ======================
+
+print("[SCRIPT] Execute lần đầu thành công!")
+
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/Voor-Pr00/Achivements/refs/heads/main/Voorpr0"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Rush Hour",
+    Desc = "Why are there too many of you-",
+    Reason = "Encounter The Hiders.",
+    Image = "rbxassetid://111972880473713"
+})
