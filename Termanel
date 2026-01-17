@@ -177,12 +177,12 @@ task.wait(2)
 entity:Destroy()
 
 -- One-time execute guard
-if getgenv()._SCRIPT_ALREADY_EXECUTED then
+if getgenv()._TERMANEL_ALREADY_EXECUTED then
     warn("[SCRIPT] Script đã được chạy trước đó, từ chối execute!")
     return
 end
 
-getgenv()._SCRIPT_ALREADY_EXECUTED = true
+getgenv()._TERMANEL_ALREADY_EXECUTED = true
 
 -- ======================
 -- SCRIPT CHÍNH BẮT ĐẦU Ở ĐÂY
