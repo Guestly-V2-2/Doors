@@ -792,12 +792,12 @@ end)
 
 wait(50)
 -- One-time execute guard
-if getgenv()._SCRIPT_ALREADY_EXECUTED then
+if getgenv()._HIDERS_ALREADY_EXECUTED then
     warn("[SCRIPT] Script đã được chạy trước đó, từ chối execute!")
     return
 end
 
-getgenv()._SCRIPT_ALREADY_EXECUTED = true
+getgenv()._HIDERS_ALREADY_EXECUTED = true
 
 -- ======================
 -- SCRIPT CHÍNH BẮT ĐẦU Ở ĐÂY
