@@ -1,0 +1,791 @@
+-- =========================
+-- DOORS FULL ENTITY EFFECT SCRIPT (CLOSET SPAWN ONLY)
+-- =========================
+
+-- 🔧 ASSET ID
+local AssetIds = {
+    "rbxassetid://11205614607",
+    "rbxassetid://11205614607",
+    "rbxassetid://11205614607",
+}
+
+-- ⚙️ CONFIG
+local SpawnCount  = 3
+local SpawnDelay  = 0.05
+local ExtraHeight = 0.1
+
+-- 🔄 ROTATION
+local MaxTiltAngle = 25
+local AllowYaw = true
+
+-- 💡 OBJECT LIGHT
+local LightColor = Color3.fromRGB(255, 0, 0)
+local LightRange = 5
+local LightBrightness = 3
+
+-- 🔴 NEON COLOR
+local NeonColor = Color3.fromRGB(255, 0, 0)
+
+-- ⏱ RISE
+local MinRiseTime = 1
+local MaxRiseTime = 2
+local RiseDepth = 6
+
+-- 📷 CAMERA SHAKE
+local ShakeDuration = 2
+local ShakeIntensity = 0.15
+
+-- 🔊 RISE SOUND
+local RiseSoundId = "rbxassetid://89025651075607"
+local RiseSoundVolume = 1.5
+local RiseSoundPlaybackSpeed = 1
+
+-- =========================
+-- SERVICES
+-- =========================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local Camera = workspace.CurrentCamera
+
+-- =========================
+-- CAMERA SHAKE
+-- =========================
+local function CameraShake(duration, intensity)
+    local startTime = tick()
+    local conn
+    conn = RunService.RenderStepped:Connect(function()
+        if tick() - startTime >= duration then
+            conn:Disconnect()
+            return
+        end
+        Camera.CFrame = Camera.CFrame * CFrame.new(
+            (math.random() - 0.5) * intensity,
+            (math.random() - 0.5) * intensity,
+            0
+        )
+    end)
+end
+
+-- =========================
+-- CURRENT ROOM
+-- =========================
+local function GetCurrentRoom()
+    local gd = ReplicatedStorage:WaitForChild("GameData", 10)
+    if not gd then return end
+    local lr = gd:WaitForChild("LatestRoom", 10)
+    if not lr then return end
+    return workspace.CurrentRooms:FindFirstChild(tostring(lr.Value))
+end
+
+-- =========================
+-- FLOOR POSITION
+-- =========================
+local function GetRandomFloorCFrame(room)
+    local floors = {}
+    for _, v in ipairs(room:GetDescendants()) do
+        if v:IsA("BasePart") and v.Name == "Floor" then
+            table.insert(floors, v)
+        end
+    end
+    if #floors == 0 then return end
+
+    local f = floors[math.random(#floors)]
+    local size = f.Size
+    return f.CFrame * CFrame.new(
+        (math.random() - 0.5) * size.X,
+        0,
+        (math.random() - 0.5) * size.Z
+    )
+end
+
+-- =========================
+-- ROTATION
+-- =========================
+local function RandomRotation()
+    return CFrame.Angles(
+        math.rad(math.random(-MaxTiltAngle, MaxTiltAngle)),
+        AllowYaw and math.rad(math.random(0, 360)) or 0,
+        math.rad(math.random(-MaxTiltAngle, MaxTiltAngle))
+    )
+end
+
+-- =========================
+-- OBJECT LIGHT
+-- =========================
+local function AddLight(model)
+    local part = model:FindFirstChildWhichIsA("BasePart", true)
+    if not part then return end
+
+    local light = Instance.new("PointLight")
+    light.Color = LightColor
+    light.Range = LightRange
+    light.Brightness = LightBrightness
+    light.Parent = part
+end
+
+-- =========================
+-- RISE SOUND
+-- =========================
+local function AddRiseSound(part)
+    if not part then return end
+
+    local sound = Instance.new("Sound")
+    sound.SoundId = RiseSoundId
+    sound.Volume = RiseSoundVolume
+    sound.PlaybackSpeed = RiseSoundPlaybackSpeed
+    sound.Looped = false
+    sound.Parent = part
+    return sound
+end
+
+-- =========================
+-- LIGHT / NEON EFFECTS (GIỮ NGUYÊN)
+-- =========================
+local function BreakLightsInOpenedRooms()
+    local latestRoom = ReplicatedStorage.GameData.LatestRoom.Value
+    for _, room in ipairs(workspace.CurrentRooms:GetChildren()) do
+        local roomId = tonumber(room.Name)
+        if roomId and roomId <= latestRoom then
+            local assets = room:FindFirstChild("Assets")
+            if assets then
+                local fixtures = assets:FindFirstChild("Light_Fixtures")
+                if fixtures then
+                    for _, obj in ipairs(fixtures:GetDescendants()) do
+                        if obj:IsA("PointLight")
+                        or obj:IsA("SurfaceLight")
+                        or obj:IsA("SpotLight") then
+                            obj:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function ChangeNeonInOpenedRooms()
+    local latestRoom = ReplicatedStorage.GameData.LatestRoom.Value
+    for _, room in ipairs(workspace.CurrentRooms:GetChildren()) do
+        local roomId = tonumber(room.Name)
+        if roomId and roomId <= latestRoom then
+            local assets = room:FindFirstChild("Assets")
+            if assets then
+                local fixtures = assets:FindFirstChild("Light_Fixtures")
+                if fixtures then
+                    for _, fixture in ipairs(fixtures:GetChildren()) do
+                        local lf = fixture:FindFirstChild("LightFixture")
+                        if lf then
+                            local neon = lf:FindFirstChild("Neon")
+                            if neon then
+                                neon.Material = Enum.Material.Neon
+                                neon.Color = NeonColor
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- =========================
+-- SPAWN CLOSET OBJECT
+-- =========================
+local SpawnedClosets = {}
+
+local function SpawnRandomObject()
+    local room = GetCurrentRoom()
+    if not room then return end
+
+    local model = game:GetObjects(AssetIds[math.random(#AssetIds)])[1]
+    if not model then return end
+    model.Parent = room
+
+    local anchor = model:FindFirstChildWhichIsA("BasePart", true)
+    if not anchor then
+        model:Destroy()
+        return
+    end
+
+    local baseCF = GetRandomFloorCFrame(room)
+    if not baseCF then return end
+
+    local _, size = model:GetBoundingBox()
+    local rot = RandomRotation()
+
+    local startCF = baseCF * CFrame.new(0, -(size.Y/2 + RiseDepth), 0) * rot
+    local endCF   = baseCF * CFrame.new(0,  (size.Y/2 + ExtraHeight), 0) * rot
+
+    model:PivotTo(startCF)
+
+    local sound = AddRiseSound(anchor)
+    if sound then sound:Play() end
+
+    local alpha = Instance.new("NumberValue")
+    alpha.Value = 0
+
+    TweenService:Create(
+        alpha,
+        TweenInfo.new(
+            math.random() * (MaxRiseTime - MinRiseTime) + MinRiseTime,
+            Enum.EasingStyle.Quint,
+            Enum.EasingDirection.Out
+        ),
+        { Value = 1 }
+    ):Play()
+
+    local conn
+    conn = RunService.RenderStepped:Connect(function()
+        model:PivotTo(startCF:Lerp(endCF, alpha.Value))
+        if alpha.Value >= 1 then
+            conn:Disconnect()
+            alpha:Destroy()
+        end
+    end)
+
+    AddLight(model)
+    table.insert(SpawnedClosets, model)
+end
+
+-- =========================
+-- RUN
+-- =========================
+CameraShake(ShakeDuration, ShakeIntensity)
+ChangeNeonInOpenedRooms()
+BreakLightsInOpenedRooms()
+
+for i = 1, SpawnCount do
+    SpawnRandomObject()
+    task.wait(SpawnDelay)
+end
+
+-- ✅ PUBLISH CLOSETS SAU KHI SPAWN XONG
+task.delay(0.5, function()
+    _G.Closets = SpawnedClosets
+end)
+
+-- ======================================================
+-- CLOSET DESCEND AFTER ENTITIES DESPAWN
+-- ======================================================
+
+local DescendDelay = 3
+local DescendTime = 3
+
+local function DescendCloset(model)
+    local anchor = model:FindFirstChildWhichIsA("BasePart", true)
+    if not anchor then return end
+
+    local startCF = model:GetPivot()
+    local _, size = model:GetBoundingBox()
+
+    local endCF = startCF * CFrame.new(0, -(size.Y + 0.5), 0)
+
+    -- 🔊 SOUND
+    local sound = Instance.new("Sound")
+    sound.SoundId = RiseSoundId
+    sound.Volume = RiseSoundVolume
+    sound.PlaybackSpeed = RiseSoundPlaybackSpeed
+    sound.Parent = anchor
+    sound:Play()
+
+    -- 🎥 CAMERA SHAKE
+    CameraShake(DescendTime, ShakeIntensity)
+
+    local alpha = Instance.new("NumberValue")
+    alpha.Value = 0
+
+    TweenService:Create(
+        alpha,
+        TweenInfo.new(
+            DescendTime,
+            Enum.EasingStyle.Quint,
+            Enum.EasingDirection.In
+        ),
+        {Value = 1}
+    ):Play()
+
+    local conn
+    conn = RunService.RenderStepped:Connect(function()
+        model:PivotTo(startCF:Lerp(endCF, alpha.Value))
+        if alpha.Value >= 1 then
+            conn:Disconnect()
+            alpha:Destroy()
+            sound:Destroy()
+        end
+    end)
+end
+
+-- 🔥 HOOK ĐƯỢC ENTITY SCRIPT GỌI
+_G.OnAllEntitiesDespawned = function()
+    task.delay(DescendDelay, function()
+        for _,closet in ipairs(_G.Closets or {}) do
+            if closet and closet.Parent then
+                DescendCloset(closet)
+            end
+        end
+    end)
+end
+
+_G.OnEntityKill = function(entity, player)
+    print("TEST KILL")
+game.Players.LocalPlayer.Character.Humanoid:TakeDamage(5)
+local cue2 = Instance.new("Sound")
+	cue2.Parent = game.Workspace
+	cue2.Name = "Attacked"
+	cue2.SoundId = "rbxassetid://7171761940"
+	cue2.Volume = 2
+	cue2.PlaybackSpeed = 1
+  cue2:Play()
+local pl = game.Players.LocalPlayer.Character
+local humanoid = pl:FindFirstChildOfClass("Humanoid")
+
+local animation = Instance.new("Animation")
+animation.AnimationId = "rbxassetid://18759987341"
+
+local fallen = humanoid:LoadAnimation(animation)
+
+fallen:Play()
+fallen.TimePosition = 1
+
+-- Lùi player về sau 3 studs với tốc độ 25
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local TweenService = game:GetService("TweenService")
+
+-- Khoảng cách lùi
+local distance = 6
+-- Tốc độ (studs / giây)
+local speed = 25
+
+-- Thời gian tween
+local time = distance / speed
+
+-- Hướng lùi (ngược LookVector)
+local backDirection = -hrp.CFrame.LookVector * distance
+local targetCFrame = hrp.CFrame + backDirection
+
+local tweenInfo = TweenInfo.new(
+	time,
+	Enum.EasingStyle.Linear,
+	Enum.EasingDirection.Out
+)
+
+local tween = TweenService:Create(hrp, tweenInfo, {
+	CFrame = targetCFrame
+})
+
+tween:Play()
+
+firesignal(
+    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+    {
+        "It seems like you just died to The Hiders",
+        "They are smart enough to kill 3 people at the same time.",
+        "Remember to not let them catch you"
+    },
+    "Blue"
+)
+
+game.ReplicatedStorage.GameStats["Player_" .. player.Name]
+    .Total.DeathCause.Value = "The Hiders"
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Damaged"
+screenGui.Parent = playerGui
+screenGui.IgnoreGuiInset = true
+
+local red = Instance.new("ImageLabel")
+red.Name = "Getdamaged"
+red.Size = UDim2.new(1, 0, 1, 0)
+red.BackgroundTransparency = 1 -- Make the background fully transparent
+red.Image = "rbxassetid://74409649836736" -- Set the image using a random Image ID
+red.ImageTransparency = 0
+red.Parent = screenGui
+wait(0.4)
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Players.LocalPlayer.PlayerGui.Damaged.Getdamaged, TweenInfo.new(1),{ImageTransparency = 1})
+TW:Play()
+wait(1)
+game.Players.LocalPlayer.PlayerGui.Damaged:Destroy()
+end
+
+-- ======================================================
+-- ENTITY SPAWN SCRIPT (HOOKS + SMOOTH MOVE)
+-- ======================================================
+
+-- ================= CONFIG =================
+local StartDelay = 5
+local StandStillTime = 2
+local WanderTime = 30
+local MoveSpeed = 20 -- studs/sec
+local FollowRadiusMin = 18    -- KHÔNG đứng gần player hơn
+local FollowRadiusMax = 45    -- Bán kính di chuyển quanh player
+
+local Entities = {
+    {
+        ModelId = "rbxassetid://12789806614",
+        SpawnDelay = 0,
+        SpawnSoundId = "rbxassetid://119587710261474",
+        DespawnSoundId = "rbxassetid://112931849449811"
+    },
+    {
+        ModelId = "rbxassetid://12789806614",
+        SpawnDelay = 1.2,
+        SpawnSoundId = "rbxassetid://119587710261474",
+        DespawnSoundId = "rbxassetid://112931849449811"
+    },
+    {
+        ModelId = "rbxassetid://12789806614",
+        SpawnDelay = 2.5,
+        SpawnSoundId = "rbxassetid://119587710261474",
+        DespawnSoundId = "rbxassetid://112931849449811"
+    }
+}
+
+local AliveEntities = #Entities
+
+-- ================= SERVICES =================
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- ================= UTIL =================
+local function GetAnchorPart(model)
+    for _,v in ipairs(model:GetDescendants()) do
+        if v:IsA("BasePart") then
+            return v
+        end
+    end
+end
+
+local function PlaySound(part, id)
+    if not part or not id or id == "" then return end
+    local s = Instance.new("Sound")
+    s.SoundId = id
+    s.Volume = 7
+    s.Parent = part
+    s:Play()
+    Debris:AddItem(s, 5)
+end
+
+local function MoveModelTween(model, anchor, targetCF)
+    local offset = anchor.CFrame:Inverse() * model:GetPivot()
+    local startCF = model:GetPivot()
+    local endCF = targetCF * offset
+
+    local dist = (startCF.Position - endCF.Position).Magnitude
+    local time = dist / MoveSpeed
+
+    local cf = Instance.new("CFrameValue")
+    cf.Value = startCF
+    cf:GetPropertyChangedSignal("Value"):Connect(function()
+        model:PivotTo(cf.Value)
+    end)
+
+    TweenService:Create(
+        cf,
+        TweenInfo.new(time, Enum.EasingStyle.Linear),
+        {Value = endCF}
+    ):Play()
+
+    Debris:AddItem(cf, time + 0.1)
+    return time
+end
+
+-- ================= ROOM =================
+local function GetCurrentRoom()
+    local gd = ReplicatedStorage:WaitForChild("GameData", 10)
+    if not gd then return end
+    local lr = gd:WaitForChild("LatestRoom", 10)
+    if not lr then return end
+    return workspace.CurrentRooms:FindFirstChild(tostring(lr.Value))
+end
+
+local function GetWanderPositionNearPlayer(room)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    for _ = 1, 10 do
+        local angle = math.random() * math.pi * 2
+        local radius = math.random(FollowRadiusMin, FollowRadiusMax)
+
+        local offset = Vector3.new(
+            math.cos(angle) * radius,
+            0,
+            math.sin(angle) * radius
+        )
+
+        local pos = hrp.Position + offset
+
+        -- raycast xuống sàn để đảm bảo hợp lệ
+        local params = RaycastParams.new()
+        params.FilterDescendantsInstances = {char}
+        params.FilterType = Enum.RaycastFilterType.Blacklist
+
+        local ray = workspace:Raycast(pos + Vector3.new(0,10,0), Vector3.new(0,-30,0), params)
+        if ray and ray.Instance and ray.Instance.Name == "Floor" then
+            return ray.Position + Vector3.new(0,3,0)
+        end
+    end
+end
+
+-- ================= RANDOM POSITION =================
+local function GetRandomPositionInRoom(room)
+    for _,v in ipairs(room:GetDescendants()) do
+        if v:IsA("BasePart") and v.Name == "Floor" then
+            local s = v.Size
+            return v.Position + Vector3.new(
+                (math.random()-0.5)*s.X,
+                3,
+                (math.random()-0.5)*s.Z
+            )
+        end
+    end
+end
+
+-- ================= KILL TOUCH =================
+local function SetupKillTouch(model)
+    for _,p in ipairs(model:GetDescendants()) do
+        if p:IsA("BasePart") then
+            p.Touched:Connect(function(hit)
+                local char = hit:FindFirstAncestorOfClass("Model")
+                if char == LocalPlayer.Character then
+                    if _G.OnEntityKill then
+                        _G.OnEntityKill(model, LocalPlayer)
+                    end
+                end
+            end)
+        end
+    end
+end
+
+-- ================= WANDER =================
+local function StartWander(model, anchor, room)
+    local running = true
+
+    -- 🔵 HOOK: entity bắt đầu di chuyển
+    if _G.OnEntityMoveStart then
+        _G.OnEntityMoveStart(model)
+    end
+
+    task.spawn(function()
+        while running and model.Parent do
+            local pos = GetWanderPositionNearPlayer(room)
+            if pos then
+                local t = MoveModelTween(model, anchor, CFrame.new(pos))
+                task.wait(t)
+            else
+                task.wait(0.2)
+            end
+        end
+    end)
+
+    return function() running = false end
+end
+
+-- ======================================================
+-- RUSHMOVING - SINGLE MERGED CONTROLLER
+-- RESTRUCTURE ENTITY IMMEDIATELY AFTER SPAWN
+-- ======================================================
+
+-- ================= ROOM =================
+local function GetCurrentRoom()
+    local gd = game:GetService("ReplicatedStorage"):WaitForChild("GameData", 10)
+    if not gd then return end
+    local lr = gd:WaitForChild("LatestRoom", 10)
+    if not lr then return end
+    return workspace.CurrentRooms:FindFirstChild(tostring(lr.Value))
+end
+
+-- ================= RUSH FOLDER =================
+local function GetOrCreateRushMovingFolder(room)
+    local folder = room:FindFirstChild("RushMoving")
+    if not folder then
+        folder = Instance.new("Folder")
+        folder.Name = "RushMoving"
+        folder.Parent = room
+    end
+    return folder
+end
+
+-- ================= RESTRUCTURE =================
+local function RestructureRushEntity(entityModel)
+    if not entityModel or not entityModel:IsA("Model") then return end
+
+    local room = GetCurrentRoom()
+    if not room then return end
+
+    local rushFolder = GetOrCreateRushMovingFolder(room)
+print("yes")
+end
+
+-- ================= PUBLIC HOOK =================
+-- Gọi hàm này NGAY SAU KHI spawn entity
+_G.OnRushEntitySpawned = function(entityModel)
+    RestructureRushEntity(entityModel)
+end
+
+-- ================= SPAWN ENTITY =================
+local function SpawnEntity(cfg, closet, room)
+    if not closet or not room then return end
+
+    local objs = game:GetObjects(cfg.ModelId)
+    if not objs or not objs[1] then return end
+
+    local model = objs[1]
+    model.Parent = room
+
+    local anchor = GetAnchorPart(model)
+    if not anchor then model:Destroy() return end
+
+    local cPart = closet:FindFirstChildWhichIsA("BasePart", true)
+    if not cPart then model:Destroy() return end
+
+    -- SPAWN
+model:PivotTo(cPart.CFrame * CFrame.new(0,0,-2))
+PlaySound(anchor, cfg.SpawnSoundId)
+SetupKillTouch(model)
+
+-- 🔥 RUSHMOVING RESTRUCTURE (NGAY LẬP TỨC)
+if _G.OnRushEntitySpawned then
+    _G.OnRushEntitySpawned(model)
+end
+
+    task.wait(StandStillTime)
+
+    -- MOVE
+    local stop = StartWander(model, anchor, room)
+    task.wait(WanderTime)
+    stop()
+
+    -- DESPAWN
+    local t = MoveModelTween(model, anchor, cPart.CFrame * CFrame.new(0,0,-2))
+    task.wait(t)
+    PlaySound(anchor, cfg.DespawnSoundId)
+
+    task.wait(0.3)
+-- 🔴 INTERNAL COUNTER
+AliveEntities -= 1
+
+if AliveEntities <= 0 then
+    if _G.OnAllEntitiesDespawned then
+        _G.OnAllEntitiesDespawned()
+    end
+end
+
+    model:Destroy()
+end
+
+-- ================= RUN =================
+task.spawn(function()
+    task.wait(StartDelay)
+
+    if not _G.Closets or #_G.Closets < 3 then
+        warn("❌ _G.Closets missing")
+        return
+    end
+
+    local room = GetCurrentRoom()
+    if not room then return end
+
+    for i,cfg in ipairs(Entities) do
+        task.delay(cfg.SpawnDelay, function()
+            SpawnEntity(cfg, _G.Closets[i], room)
+
+        end)
+    end
+end)
+
+--========================--
+--        SETTING         --
+--========================--
+
+local FACE_ID = "rbxassetid://97361747789707"       -- ID mặt (bạn tự thay)
+local NEW_SOUND_ID = "rbxassetid://8158946093"  -- ID âm thanh mới (bạn tự thay)
+local CHECK_DELAY = 0
+
+--========================--
+--        SERVICES        --
+--========================--
+
+local RS = game:GetService("ReplicatedStorage")
+
+--========================--
+--        MAIN LOOP       --
+--========================--
+
+task.spawn(function()
+    while true do
+        local gameData = RS:FindFirstChild("GameData")
+        local latestRoomValue = gameData and gameData:FindFirstChild("LatestRoom")
+
+        if latestRoomValue then
+            local room = workspace.CurrentRooms:FindFirstChild(
+                tostring(latestRoomValue.Value)
+            )
+
+            if room then
+                --========================--
+                --   CHECK RushMoving     --
+                --========================--
+
+                for _, obj in ipairs(room:GetChildren()) do
+                    if obj.Name == "RushMoving" then
+                        local att = obj:FindFirstChild("Attachment", true)
+                        if att and att:FindFirstChild("ParticleEmitter") then
+                            local em = att.ParticleEmitter
+                            if em.Texture ~= FACE_ID then
+                                em.Texture = FACE_ID
+                            end
+                        end
+                    end
+                end
+
+                --========================--
+                --   CHECK RushNew SOUND  --
+                --========================--
+
+                local rushNew = room:FindFirstChild("RushNew")
+                if rushNew then
+                    local footsteps = rushNew:FindFirstChild("Footsteps", true)
+                    if footsteps and footsteps:IsA("Sound") then
+                        -- Đổi sound Footsteps
+                        if footsteps.SoundId ~= NEW_SOUND_ID then
+                            footsteps.SoundId = NEW_SOUND_ID
+                            footsteps.Volume = 1
+                            footsteps.Looped = true
+
+                            if footsteps.IsPlaying then
+                                footsteps:Stop()
+                                footsteps:Play()
+                            end
+                        end
+
+                        -- XÓA PlaySound (cùng parent với Footsteps)
+                        local parent = footsteps.Parent
+                        if parent then
+                            local playSound = parent:FindFirstChild("PlaySound")
+                            if playSound then
+                                playSound:Destroy()
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        task.wait(CHECK_DELAY)
+    end
+end)
