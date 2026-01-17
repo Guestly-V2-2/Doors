@@ -1,0 +1,257 @@
+---====== Services ======---
+
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+---====== Load spawner ======---
+
+local spawner = loadstring(game:HttpGet(
+	"https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua"
+))()
+
+---====== ColorCorrection setup ======---
+
+local colorCorrection = Lighting:FindFirstChild("MainColorCorrection")
+if not colorCorrection then
+	colorCorrection = Instance.new("ColorCorrectionEffect")
+	colorCorrection.Name = "MainColorCorrection"
+	colorCorrection.Parent = Lighting
+end
+
+local originalTint = colorCorrection.TintColor
+local originalContrast = colorCorrection.Contrast
+
+---====== Save lighting state ======---
+
+local originalFogEnd = Lighting.FogEnd
+local originalFogStart = Lighting.FogStart
+local originalFogColor = Lighting.FogColor
+
+---====== Fog settings ======---
+
+local FOG_START = 0
+local FOG_END_START = 260
+local FOG_END_FINAL = 65
+local FOG_COLOR = Color3.fromRGB(80, 30, 30)
+
+local fogInTween
+local fogOutTween
+
+---====== Fog functions ======---
+
+local function enableFog()
+	Lighting.FogStart = FOG_START
+	Lighting.FogEnd = FOG_END_START
+	Lighting.FogColor = FOG_COLOR
+
+	if fogInTween then fogInTween:Cancel() end
+
+	fogInTween = TweenService:Create(
+		Lighting,
+		TweenInfo.new(6, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+		{ FogEnd = FOG_END_FINAL }
+	)
+
+	fogInTween:Play()
+end
+
+local function disableFog()
+	if fogInTween then fogInTween:Cancel() end
+	if fogOutTween then fogOutTween:Cancel() end
+
+	fogOutTween = TweenService:Create(
+		Lighting,
+		TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{
+			FogEnd = originalFogEnd,
+			FogStart = originalFogStart
+		}
+	)
+
+	fogOutTween:Play()
+
+	task.delay(3, function()
+		Lighting.FogColor = originalFogColor
+	end)
+end
+
+---====== ColorCorrection ======---
+
+local function enableRedTint()
+	colorCorrection.Contrast = 6
+	colorCorrection.TintColor = Color3.fromRGB(255, 255, 255)
+
+	TweenService:Create(
+		colorCorrection,
+		TweenInfo.new(2.5),
+		{ Contrast = 0 }
+	):Play()
+
+	TweenService:Create(
+		colorCorrection,
+		TweenInfo.new(5),
+		{ TintColor = Color3.fromRGB(230, 40, 40) }
+	):Play()
+end
+
+local function disableRedTint()
+	TweenService:Create(
+		colorCorrection,
+		TweenInfo.new(3),
+		{
+			TintColor = originalTint,
+			Contrast = originalContrast
+		}
+	):Play()
+end
+
+---====== Spawn Sound ======---
+
+local function playSpawnSound()
+	local cue2 = Instance.new("Sound")
+	cue2.Name = "ThatoneFaint"
+	cue2.SoundId = "rbxassetid://166047422"
+	cue2.Volume = 10
+	cue2.PlaybackSpeed = 0.9
+	cue2.Parent = workspace
+	cue2:Play()
+
+	cue2.Ended:Once(function()
+		cue2:Destroy()
+	end)
+end
+
+---====== Create entity ======---
+
+local entity = spawner.Create({
+	Entity = {
+		Name = "Eclipser",
+		Asset = "https://github.com/vuivuiviu2/hard-mode/raw/refs/heads/main/eclip.rbxm",
+		HeightOffset = 0
+	},
+
+	Lights = {
+		Flicker = { Enabled = false },
+		Shatter = false,
+		Repair = false
+	},
+
+	Earthquake = { Enabled = false },
+
+	CameraShake = {
+		Enabled = true,
+		Range = 120,
+		Values = {5, 70, 0.05, 1.3}
+	},
+
+	Movement = {
+		Speed = 150,
+		Delay = 5
+	},
+
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 4,
+		Max = 5,
+		Delay = 0
+	},
+
+	Damage = {
+		Enabled = false,
+		Range = 40,
+		Amount = 99
+	},
+
+	Crucifixion = {
+		Enabled = true
+	},
+
+	-- ðŸ”¥
+	Death = {
+		Type = "Guiding",
+		Hints = {
+			"It seems you have encountered Eclipser.",
+			"This entity does not leave after a single pass.",
+			"It will return, again and again.",
+			"When the room suddenly turns red...",
+			"...and thick fog consumes your vision...",
+			"Eclipser is nearby.",
+			"Do not leave your hiding place.",
+			"Wait until the red light fades completely.",
+			"Only then should you move forward."
+		},
+		Cause = "Eclipser"
+	}
+})
+
+---====== Damage control ======---
+
+local function setDamage(state)
+	entity.Config.Damage.Enabled = state
+end
+
+---====== Callbacks ======---
+
+entity:SetCallback("OnSpawned", function()
+	print("[ECLIPSER] Spawned")
+workspace.Eclipser.Part["Angler Close "].Volume = 10
+	setDamage(false)
+	enableFog()
+	enableRedTint()
+	playSpawnSound()
+end)
+
+entity:SetCallback("OnStartMoving", function()
+	print("[ECLIPSER] Moving â†’ Damage ON")
+	setDamage(true)
+end)
+
+entity:SetCallback("OnRebounding", function(start)
+	if start then
+		print("[ECLIPSER] Delay rebound â†’ Damage OFF")
+		setDamage(false)
+	else
+		print("[ECLIPSER] Rebound finished â†’ Damage ON")
+		setDamage(true)
+	end
+end)
+
+entity:SetCallback("OnDespawning", function()
+	print("[ECLIPSER] Despawning")
+	setDamage(false)
+	disableFog()
+	disableRedTint()
+end)
+
+entity:SetCallback("OnDespawned", function()
+	print("[ECLIPSER] Despawned")
+-- One-time execute guard
+if getgenv()._SCRIPT_ALREADY_EXECUTED then
+    warn("[SCRIPT] Script đã được chạy trước đó, từ chối execute!")
+    return
+end
+
+getgenv()._SCRIPT_ALREADY_EXECUTED = true
+
+-- ======================
+-- SCRIPT CHÍNH BẮT ĐẦU Ở ĐÂY
+-- ======================
+
+print("[SCRIPT] Execute lần đầu thành công!")
+
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/Voor-Pr00/Achivements/refs/heads/main/Voorpr0"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "The Rageness of the Doom",
+    Desc = "Why are the rooms turning red?!",
+    Reason = "Encounter Eclipser.",
+    Image = "rbxassetid://138550434511422"
+})
+
+end)
+
+---====== Run entity ======---
+
+entity:Run()
