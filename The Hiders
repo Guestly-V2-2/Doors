@@ -431,19 +431,19 @@ local FollowRadiusMax = 45    -- Bán kính di chuyển quanh player
 
 local Entities = {
     {
-        ModelId = "rbxassetid://12789806614",
+        ModelId = "rbxassetid://87057691012083",
         SpawnDelay = 0,
         SpawnSoundId = "rbxassetid://119587710261474",
         DespawnSoundId = "rbxassetid://112931849449811"
     },
     {
-        ModelId = "rbxassetid://12789806614",
+        ModelId = "rbxassetid://87057691012083",
         SpawnDelay = 1.2,
         SpawnSoundId = "rbxassetid://119587710261474",
         DespawnSoundId = "rbxassetid://112931849449811"
     },
     {
-        ModelId = "rbxassetid://12789806614",
+        ModelId = "rbxassetid://87057691012083",
         SpawnDelay = 2.5,
         SpawnSoundId = "rbxassetid://119587710261474",
         DespawnSoundId = "rbxassetid://112931849449811"
@@ -705,88 +705,6 @@ task.spawn(function()
             SpawnEntity(cfg, _G.Closets[i], room)
 
         end)
-    end
-end)
-
---========================--
---        SETTING         --
---========================--
-
-local FACE_ID = "rbxassetid://97361747789707"       -- ID mặt (bạn tự thay)
-local NEW_SOUND_ID = "rbxassetid://8158946093"  -- ID âm thanh mới (bạn tự thay)
-local CHECK_DELAY = 0
-
---========================--
---        SERVICES        --
---========================--
-
-local RS = game:GetService("ReplicatedStorage")
-
---========================--
---        MAIN LOOP       --
---========================--
-
-task.spawn(function()
-    while true do
-        local gameData = RS:FindFirstChild("GameData")
-        local latestRoomValue = gameData and gameData:FindFirstChild("LatestRoom")
-
-        if latestRoomValue then
-            local room = workspace.CurrentRooms:FindFirstChild(
-                tostring(latestRoomValue.Value)
-            )
-
-            if room then
-                --========================--
-                --   CHECK RushMoving     --
-                --========================--
-
-                for _, obj in ipairs(room:GetChildren()) do
-                    if obj.Name == "RushMoving" then
-                        local att = obj:FindFirstChild("Attachment", true)
-                        if att and att:FindFirstChild("ParticleEmitter") then
-                            local em = att.ParticleEmitter
-                            if em.Texture ~= FACE_ID then
-                                em.Texture = FACE_ID
-                            end
-                        end
-                    end
-                end
-
-                --========================--
-                --   CHECK RushNew SOUND  --
-                --========================--
-
-                local rushNew = room:FindFirstChild("RushNew")
-                if rushNew then
-                    local footsteps = rushNew:FindFirstChild("Footsteps", true)
-                    if footsteps and footsteps:IsA("Sound") then
-                        -- Đổi sound Footsteps
-                        if footsteps.SoundId ~= NEW_SOUND_ID then
-                            footsteps.SoundId = NEW_SOUND_ID
-                            footsteps.Volume = 1
-                            footsteps.Looped = true
-
-                            if footsteps.IsPlaying then
-                                footsteps:Stop()
-                                footsteps:Play()
-                            end
-                        end
-
-                        -- XÓA PlaySound (cùng parent với Footsteps)
-                        local parent = footsteps.Parent
-                        if parent then
-                            local playSound = parent:FindFirstChild("PlaySound")
-                            if playSound then
-                                playSound:Destroy()
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        task.wait(CHECK_DELAY)
     end
 end)
 
