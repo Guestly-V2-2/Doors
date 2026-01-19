@@ -1,0 +1,197 @@
+-- =========================
+-- RESET SCRIPT CŨ (CHO PHÉP CHẠY LẠI)
+-- =========================
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+if getgenv().HighlightFadeSystem then
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local char = plr.Character
+            local hl = char:FindFirstChild("RandomHighlight")
+            if hl then hl:Destroy() end
+
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local light = root:FindFirstChild("RandomPointLight")
+                if light then light:Destroy() end
+            end
+        end
+    end
+end
+
+getgenv().HighlightFadeSystem = true
+
+-- =========================
+-- SERVICES
+-- =========================
+local TweenService = game:GetService("TweenService")
+
+-- =========================
+-- CONFIG
+-- =========================
+local FADE_IN_TIME = 2
+local FADE_OUT_TIME = 3
+local COUNTDOWN_TIME = 62
+
+local LIGHT_BRIGHTNESS = 3
+local LIGHT_RANGE = 7
+
+-- =========================
+-- STATE
+-- =========================
+local PlayerColors = {}
+local HighlightDisabled = false
+local FadeInFinished = false
+
+-- =========================
+-- UTILS
+-- =========================
+local function randomColor()
+    return Color3.fromRGB(
+        math.random(0,255),
+        math.random(0,255),
+        math.random(0,255)
+    )
+end
+
+local function getColor(player)
+    if not PlayerColors[player] then
+        PlayerColors[player] = randomColor()
+    end
+    return PlayerColors[player]
+end
+
+-- =========================
+-- CREATE VISUALS
+-- =========================
+local function createVisuals(player)
+    if HighlightDisabled then return end
+    if player == LocalPlayer then return end -- ❌ bỏ player nhập script
+
+    local char = player.Character
+    if not char then return end
+    if char:FindFirstChild("RandomHighlight") then return end
+
+    local color = getColor(player)
+
+    -- Highlight
+    local hl = Instance.new("Highlight")
+    hl.Name = "RandomHighlight"
+    hl.FillColor = color
+    hl.OutlineColor = Color3.new(1,1,1)
+    hl.FillTransparency = 1
+    hl.OutlineTransparency = 1
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent = char
+
+    -- PointLight
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        local light = Instance.new("PointLight")
+        light.Name = "RandomPointLight"
+        light.Color = color
+        light.Brightness = 0 -- fade in
+        light.Range = LIGHT_RANGE
+        light.Parent = root
+
+        if not FadeInFinished then
+            TweenService:Create(
+                light,
+                TweenInfo.new(FADE_IN_TIME, Enum.EasingStyle.Linear),
+                { Brightness = LIGHT_BRIGHTNESS }
+            ):Play()
+        else
+            light.Brightness = LIGHT_BRIGHTNESS
+        end
+    end
+
+    -- Fade IN highlight
+    if not FadeInFinished then
+        TweenService:Create(
+            hl,
+            TweenInfo.new(FADE_IN_TIME, Enum.EasingStyle.Linear),
+            { FillTransparency = 0.4, OutlineTransparency = 0 }
+        ):Play()
+    else
+        hl.FillTransparency = 0.4
+        hl.OutlineTransparency = 0
+    end
+end
+
+-- =========================
+-- PLAYER SETUP
+-- =========================
+local function setupPlayer(player)
+    if player == LocalPlayer then return end
+
+    player.CharacterAdded:Connect(function()
+        task.wait(0.15)
+        createVisuals(player)
+    end)
+
+    if player.Character then
+        createVisuals(player)
+    end
+end
+
+for _, plr in ipairs(Players:GetPlayers()) do
+    setupPlayer(plr)
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    setupPlayer(plr)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    PlayerColors[plr] = nil
+end)
+
+-- =========================
+-- FADE IN → START TIMER
+-- =========================
+task.delay(FADE_IN_TIME, function()
+    FadeInFinished = true
+
+    task.delay(COUNTDOWN_TIME, function()
+        HighlightDisabled = true
+
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                local char = plr.Character
+
+                -- Fade OUT highlight
+                local hl = char:FindFirstChild("RandomHighlight")
+                if hl then
+                    TweenService:Create(
+                        hl,
+                        TweenInfo.new(FADE_OUT_TIME, Enum.EasingStyle.Linear),
+                        { FillTransparency = 1, OutlineTransparency = 1 }
+                    ):Play()
+                end
+
+                -- Fade OUT light
+                local root = char:FindFirstChild("HumanoidRootPart")
+                if root then
+                    local light = root:FindFirstChild("RandomPointLight")
+                    if light then
+                        TweenService:Create(
+                            light,
+                            TweenInfo.new(FADE_OUT_TIME, Enum.EasingStyle.Linear),
+                            { Brightness = 0 }
+                        ):Play()
+                    end
+                end
+
+                -- Destroy sau fade
+                task.delay(FADE_OUT_TIME, function()
+                    if hl then hl:Destroy() end
+                    if root then
+                        local light = root:FindFirstChild("RandomPointLight")
+                        if light then light:Destroy() end
+                    end
+                end)
+            end
+        end
+    end)
+end)
