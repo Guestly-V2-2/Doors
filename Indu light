@@ -1,9 +1,6 @@
 -- 2. Hàm xóa / tắt mọi nguồn sáng
 local function removeLight(obj)
-    -- 🔒 KHÔNG XÓA ĐÈN PIN PLAYER
-    if CollectionService:HasTag(obj, "PlayerFlashlight") then
-        return
-    end
+    -- 🔒 KHÔNG XÓA ĐÈN PIN PLAYEr
 
     if obj:IsA("PointLight")
     or obj:IsA("SpotLight")
