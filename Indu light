@@ -1,0 +1,51 @@
+-- 2. Hàm xóa / tắt mọi nguồn sáng
+local function removeLight(obj)
+    -- 🔒 KHÔNG XÓA ĐÈN PIN PLAYER
+    if CollectionService:HasTag(obj, "PlayerFlashlight") then
+        return
+    end
+
+    if obj:IsA("PointLight")
+    or obj:IsA("SpotLight")
+    or obj:IsA("SurfaceLight") then
+        obj.Enabled = false
+        obj:Destroy()
+    end
+
+    -- Lửa (lò sưởi, đuốc…)
+    if obj:IsA("Fire") then
+        obj.Enabled = false
+        obj:Destroy()
+    end
+
+    -- Hạt phát sáng
+    if obj:IsA("ParticleEmitter")
+    or obj:IsA("Smoke") then
+        obj.Enabled = false
+        obj:Destroy()
+    end
+
+    -- Part phát sáng (Neon)
+    if obj:IsA("BasePart") then
+        if obj.Material == Enum.Material.Neon then
+            obj.Material = Enum.Material.Plastic
+        end
+    end
+end
+
+-- 3. Quét toàn bộ map
+for _, v in pairs(workspace:GetDescendants()) do
+    pcall(function()
+        removeLight(v)
+    end)
+end
+
+-- 4. Ngăn đèn mới spawn sau này
+workspace.DescendantAdded:Connect(function(v)
+    task.wait()
+    pcall(function()
+        removeLight(v)
+    end)
+end)
+
+print(">> All lights removed (flashlight protected)")
