@@ -1,0 +1,150 @@
+--====== Load spawner (Fogroom) ======--
+local spawner = loadstring(game:HttpGet(
+	"https://raw.githubusercontent.com/VoorPhale012/Fogroom/refs/heads/main/Wwwhyyyyil"
+))()
+
+--====== Sound utils ======--
+function GitAud(soundlink, filename)
+	if not isfile(filename..".mp3") then
+		writefile(filename..".mp3", game:HttpGet(soundlink))
+	end
+
+	local getAsset = getcustomasset or getsynasset  
+	if typeof(getAsset) == "function" then  
+		return getAsset(filename..".mp3")  
+	else  
+		warn("getcustomasset/getsynasset khÃ´ng kháº£ dá»¥ng!")  
+		return ""  
+	end
+end
+
+local mortisSound
+function PlayGitSound(soundlink, vol, filename)
+	mortisSound = Instance.new("Sound")
+	mortisSound.SoundId = GitAud(soundlink, filename)
+	mortisSound.Volume = vol
+	mortisSound.Looped = true
+	mortisSound.Name = "MortisOST"
+	mortisSound.Parent = workspace
+	mortisSound:Play()
+end
+
+function StopMortisSound()
+	if mortisSound then
+		mortisSound:Stop()
+		mortisSound:Destroy()
+		mortisSound = nil
+	end
+end
+
+--====== Create entity ======--
+local entity = spawner.Create({
+	Entity = {
+		Name = "Seraphim Mortis",
+		Asset = "https://github.com/vuivuiviu2/Pressure-/raw/main/harbinger.rbxm",
+		HeightOffset = 0
+	},
+
+	-- skibidi 
+
+	Earthquake = { Enabled = true },
+
+	CameraShake = {
+		Enabled = true,
+		Range = 100,
+		Values = {5, 66, 0.7, 6}
+	},
+
+	Movement = {
+		Speed = 200,
+		Delay = 5,
+		Reversed = false
+	},
+
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 5,
+		Max = 5,
+		Delay = 0
+	},
+
+	Damage = {
+		Enabled = true,
+		Range = 30,
+		Amount = 99.9
+	},
+
+	Crucifixion = {
+		Enabled = false,
+		Range = 51,
+		Resist = false,
+		Break = true
+	},
+
+	Death = {
+		Type = "Guiding",
+		Hints = {"...", "...", "I'm sorry, I don't know what just happened.", "..."},
+		Cause = "Seraphim Mortis"
+	}
+})
+
+--====== OnSpawned (GIá»® LIGHTING + COLOR) ======--
+entity:SetCallback("OnSpawned", function()
+	print("Seraphim Mortis has spawned")
+
+	local Lighting = game:GetService("Lighting")
+	local TweenService = game:GetService("TweenService")
+
+	if not Lighting:FindFirstChild("MainColorCorrection") then
+		local cc = Instance.new("ColorCorrectionEffect")
+		cc.Name = "MainColorCorrection"
+		cc.Parent = Lighting
+	end
+
+	local cc = Lighting.MainColorCorrection
+	cc.TintColor = Color3.fromRGB(255,255,255)
+	cc.Contrast = 10
+
+	TweenService:Create(cc, TweenInfo.new(2.5), {Contrast = 0}):Play()
+	TweenService:Create(cc, TweenInfo.new(5), {TintColor = Color3.fromRGB(250,0,0)}):Play()
+
+	PlayGitSound(
+		"https://github.com/vuivuiviu2/Tension-Mode/raw/main/Death%20Angel%20OST%20-%20Roblox%20Pressure%20-%20Kys%20Now.mp3",
+		1,
+		"seraphim_mortis_ost"
+	)
+end)
+
+--====== Reset lighting + sound ======--
+local function ResetLightingAndSound()
+	print("Seraphim Mortis despawned or crucified")
+	StopMortisSound()
+
+	local Lighting = game:GetService("Lighting")
+	local TweenService = game:GetService("TweenService")
+	local cc = Lighting:FindFirstChild("MainColorCorrection")
+
+	if cc then
+		TweenService:Create(cc, TweenInfo.new(2), {
+			TintColor = Color3.fromRGB(255,255,255),
+			Contrast = 0
+		}):Play()
+	end
+end
+
+entity:SetCallback("OnDespawned", ResetLightingAndSound)
+entity:SetCallback("OnCrucifixion", ResetLightingAndSound)
+
+--====== Crash game ======--
+entity:SetCallback("OnEntityKilledPlayer", function(plr)
+	print("Seraphim Mortis killed:", plr.Name)
+	task.delay(0.5, function()
+		pcall(function()
+			game:Shutdown()
+		end)
+	end)
+end)
+
+--====== Run ======--
+entity:Run()
