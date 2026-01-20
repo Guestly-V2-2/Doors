@@ -1,0 +1,202 @@
+--====== Load Spawner ======--
+loadstring = _G.loadstring
+
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/VoorPhale012/Fogroom/refs/heads/main/Wwwhyyyyil"))()
+
+--====== Create Entity ======--
+local entity = spawner.Create({
+	Entity = {
+		Name = "A-60",
+		Asset = "https://github.com/vuivuiviu2/Pressure-/raw/main/a-600.rbxm",
+		HeightOffset = 0
+	},
+	Lights = {  -- nÃ o 
+		Flicker = {
+			Enabled = false,
+			Duration = 0.8
+		},
+		Shatter = false,
+		Repair = false
+	},
+	Earthquake = { Enabled = false },
+	CameraShake = { Enabled = true, Range = 100, Values = {1.5, 20, 0.1, 1} },
+	Movement = { Speed = 200, Delay = 4, Reversed = false },
+	Rebounding = { Enabled = true, Type = "Blitz", Min = 1, Max = 1, Delay = 0 },
+	Damage = { Enabled = true, Range = 50, Amount = 66 },
+	Crucifixion = { Enabled = true, Range = 50, Resist = false, Break = true },
+	Death = { Type = "Default", Hints = {"Lol", "LOL", "LOLLLLLLLLLL"}, Cause = "A-60 The Multi Monster" }
+})
+
+--====== Callbacks ======--
+entity:SetCallback("OnSpawned", function()
+	print("A-60 has spawned")
+	local Player = game.Players.LocalPlayer
+	if not Player then return end
+	local PlayerGui = Player:WaitForChild("PlayerGui")
+
+	-- ===== Static nháº¥p nhÃ¡y =====
+	local staticGui = Instance.new("ScreenGui")
+	staticGui.Name = "A60Static"
+	staticGui.IgnoreGuiInset = true
+	staticGui.ResetOnSpawn = false
+	staticGui.Parent = PlayerGui
+
+	local staticImg = Instance.new("ImageLabel")
+	staticImg.Size = UDim2.new(1,0,1,0)
+	staticImg.Position = UDim2.new(0,0,0,0)
+	staticImg.BackgroundTransparency = 1
+	staticImg.Image = "rbxassetid://120865463688240" -- texture static má»›i
+	staticImg.ImageTransparency = 0.95
+	staticImg.ZIndex = 50
+	staticImg.Parent = staticGui
+
+	-- Nháº¥p nhÃ¡y nháº¹
+	local running = true
+	spawn(function()
+		while running do
+			if staticImg then
+				staticImg.ImageTransparency = 0.93 + math.random() * 0.2
+			end
+			task.wait(0.1)
+		end
+	end)
+
+	-- XÃ³a static sau 5 giÃ¢y náº¿u chÆ°a despawn
+	task.delay(5, function()
+		running = false
+		if staticGui then staticGui:Destroy() end
+	end)
+
+	-- ===== OnSpawned gá»‘c (text label) =====
+	task.delay(4, function()
+		local ScreenGui = Instance.new("ScreenGui")
+		ScreenGui.Name = "A60Message"
+		ScreenGui.IgnoreGuiInset = true
+		ScreenGui.ResetOnSpawn = false
+		ScreenGui.Parent = PlayerGui
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(0, 400, 0, 50)
+		label.Position = UDim2.new(0.5, -200, 0.5, 50)
+		label.BackgroundTransparency = 1
+		label.TextScaled = false
+		label.TextSize = 26
+		label.Font = Enum.Font.Oswald
+		label.TextColor3 = Color3.fromRGB(255, 64, 64)
+		label.TextStrokeTransparency = 0.2
+		label.TextStrokeColor3 = Color3.new(0, 0, 0)
+		label.TextWrapped = true
+		label.Text = ({
+			"coming through.",
+			"heads up.",
+			"incoming.",
+			"ready?",
+			"think fast."
+		})[math.random(1, 5)]
+		label.Parent = ScreenGui
+
+		task.delay(2.5, function()
+			if ScreenGui then ScreenGui:Destroy() end
+		end)
+	end)
+end)
+
+entity:SetCallback("OnStartMoving", function() print("A-60 has started moving") end)
+entity:SetCallback("OnRebounding", function(start)
+	if start then print("A-60 is rebounding") else print("A-60 finished rebound") end
+end)
+
+entity:SetCallback("OnDespawned", function()
+	print("A-60 has despawned")
+	local Player = game.Players.LocalPlayer
+	if Player then
+		local PlayerGui = Player:FindFirstChild("PlayerGui")
+		if PlayerGui then
+			local static = PlayerGui:FindFirstChild("A60Static")
+			if static then static:Destroy() end
+		end
+	end
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	local Player = game.Players.LocalPlayer
+	if not Player then return end
+	local PlayerGui = Player:WaitForChild("PlayerGui")
+
+	if newHealth == 0 then
+		print("A-60 has killed the player")
+
+		local screenGui = Instance.new("ScreenGui")
+		screenGui.IgnoreGuiInset = true
+		screenGui.ResetOnSpawn = false
+		screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		screenGui.Parent = PlayerGui
+
+		local imageLabel = Instance.new("ImageLabel")
+		imageLabel.BackgroundTransparency = 1
+		imageLabel.Size = UDim2.new(1,0,1,0)
+		imageLabel.Position = UDim2.new(0,0,0,0)
+		imageLabel.Image = "rbxassetid://88727249929792"
+		imageLabel.ImageColor3 = Color3.new(1,1,1)
+		imageLabel.ZIndex = 1
+		imageLabel.Parent = screenGui
+
+		local lines = {
+			"funny. i got to meet you here too.",
+			"perhaps it is fate bringing us together?",
+			"remember me?\ni remember you.",
+			"your taste in games suck.\ngo play something else.",
+			"start paying attention.\nyou're getting sloppy.",
+			"come on.\nyou can do better than that.",
+			"we've been doing the same song and dance for years.\nwhy do you still continue to fail?",
+			"it was nice seeing you again.\nso sad it had to be cut so short.",
+			"happy to see me?\nim happy to see you too."
+		}
+
+		local selected = lines[math.random(1,#lines)]
+		local splitLines = string.split(selected,"\n")
+
+		local text1 = Instance.new("TextLabel")
+		text1.Size = UDim2.new(1,0,0,50)
+		text1.Position = UDim2.new(0.5,0,0.65,0)
+		text1.AnchorPoint = Vector2.new(0.5,0.5)
+		text1.BackgroundTransparency = 1
+		text1.Text = ""
+		text1.Font = Enum.Font.Oswald
+		text1.TextSize = 42
+		text1.TextColor3 = Color3.fromRGB(180,0,0)
+		text1.TextStrokeTransparency = 0.3
+		text1.TextStrokeColor3 = Color3.fromRGB(80,0,0)
+		text1.TextXAlignment = Enum.TextXAlignment.Center
+		text1.TextYAlignment = Enum.TextYAlignment.Center
+		text1.ZIndex = 2
+		text1.Parent = screenGui
+
+		local text2 = Instance.new("TextLabel")
+		text2.Size = UDim2.new(1,0,0,50)
+		text2.Position = UDim2.new(0.5,0,0.71,0)
+		text2.AnchorPoint = Vector2.new(0.5,0.5)
+		text2.BackgroundTransparency = 1
+		text2.Text = ""
+		text2.Font = Enum.Font.Oswald
+		text2.TextSize = 42
+		text2.TextColor3 = Color3.fromRGB(180,0,0)
+		text2.TextStrokeTransparency = 0.3
+		text2.TextStrokeColor3 = Color3.fromRGB(80,0,0)
+		text2.TextXAlignment = Enum.TextXAlignment.Center
+		text2.TextYAlignment = Enum.TextYAlignment.Center
+		text2.ZIndex = 2
+		text2.Parent = screenGui
+
+		task.wait(1)
+		text1.Text = splitLines[1]
+		if splitLines[2] then task.wait(2) text2.Text = splitLines[2] end
+
+		task.delay(6,function() if screenGui then screenGui:Destroy() end end)
+	else
+		print("A-60 has damaged the player")
+	end
+end)
+
+--====== Run Entity ======--
+entity:Run()
