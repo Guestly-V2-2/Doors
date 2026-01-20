@@ -14,7 +14,7 @@ local hrp = character:WaitForChild("HumanoidRootPart")
 -------------------------------------------------
 -- CONFIG
 -------------------------------------------------
-local PART_SPEED = 6.7          -- tốc độ di chuyển
+local PART_SPEED = 10.67          -- tốc độ di chuyển
 local MAX_POINTS = 30          -- số point path tối đa
 local RECORD_DISTANCE = 2      -- khoảng cách ghi path
 local SPAWN_DISTANCE = 60      -- spawn phía sau player
@@ -288,7 +288,7 @@ local config = {
 
 	Flashing = {
 		true,
-		Color3.fromRGB(0, 255, 0)
+		Color3.fromRGB(99, 4, 4)
 	},
 
 	Tease = {
