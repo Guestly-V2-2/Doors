@@ -1,0 +1,206 @@
+-- =====================================================
+-- DOORS Entity Wardrobe Destroyer (PROMPT DISABLE)
+-- =====================================================
+
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+
+-- ======================
+-- CONFIG (TỰ GẮN)
+-- ======================
+local ENTITY_MODEL_ID = "rbxassetid://129719159383236"
+local BREAK_SOUND_ID = "rbxassetid://135013322379425"
+local MOVE_SPEED = 40
+
+-- ======================
+-- PHÒNG HIỆN TẠI
+-- ======================
+local latestRoom = game.ReplicatedStorage.GameData.LatestRoom.Value
+local room = Workspace.CurrentRooms:FindFirstChild(tostring(latestRoom))
+if not room then return end
+
+local assets = room:FindFirstChild("Assets")
+if not assets then return end
+
+-- ======================
+-- LẤY TẤT CẢ WARDROBE
+-- ======================
+local wardrobes = {}
+for _, obj in ipairs(assets:GetChildren()) do
+	if obj:IsA("Model") and obj.Name == "Wardrobe" then
+		table.insert(wardrobes, obj)
+	end
+end
+if #wardrobes == 0 then return end
+
+-- =====================================================
+-- ❗❗ XÓA / TẮT HIDE PROMPT NGAY KHI SPAWN ❗❗
+-- =====================================================
+for _, closet in ipairs(wardrobes) do
+	if closet and closet.Parent then
+		local prompt = closet:FindFirstChild("HidePrompt", true)
+		if prompt and prompt:IsA("ProximityPrompt") then
+			prompt.Enabled = false
+			prompt:Destroy() -- xóa luôn để chắc chắn
+		end
+	end
+end
+
+-- ======================
+-- TÍNH TRUNG TÂM PHÒNG
+-- ======================
+local minV = Vector3.new(math.huge, math.huge, math.huge)
+local maxV = Vector3.new(-math.huge, -math.huge, -math.huge)
+
+for _, p in ipairs(assets:GetDescendants()) do
+	if p:IsA("BasePart") then
+		minV = minV:Min(p.Position)
+		maxV = maxV:Max(p.Position)
+	end
+end
+
+local centerPos = (minV + maxV) / 2
+
+-- ======================
+-- SPAWN ENTITY DƯỚI ĐẤT
+-- ======================
+local entity = game:GetObjects(ENTITY_MODEL_ID)[1]
+entity.Parent = Workspace
+entity:PivotTo(CFrame.new(centerPos - Vector3.new(0, 15, 0)))
+workspace["A-200"]["A-200"].Attachment.Face.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(122, 129, 255)),   -- Đỏ
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(122, 129, 255)), -- Xanh lá
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(122, 129, 255))    -- Xanh dương
+})
+
+if not entity.PrimaryPart then
+	entity.PrimaryPart = entity:FindFirstChildWhichIsA("BasePart", true)
+end
+if not entity.PrimaryPart then return end
+
+local root = entity.PrimaryPart
+
+-- ======================
+-- RAYCAST TÌM SÀN
+-- ======================
+local rayParams = RaycastParams.new()
+rayParams.FilterDescendantsInstances = { entity }
+rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+local rayResult = Workspace:Raycast(
+	centerPos - Vector3.new(0, 30, 0),
+	Vector3.new(0, 60, 0),
+	rayParams
+)
+
+if not rayResult then
+	entity:Destroy()
+	return
+end
+
+local groundY = rayResult.Position.Y
+
+-- ======================
+-- CHỒI LÊN SÀN
+-- ======================
+TweenService:Create(
+	root,
+	TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+	{ CFrame = CFrame.new(centerPos.X, groundY + 1, centerPos.Z) }
+):Play()
+
+task.wait(1.2)
+
+-- ======================
+-- PHÁ TỦ (1 HOẶC NHIỀU)
+-- ======================
+while #wardrobes > 0 do
+	local closet = wardrobes[1]
+
+	if closet and closet.Parent then
+		if not closet.PrimaryPart then
+			closet.PrimaryPart = closet:FindFirstChildWhichIsA("BasePart", true)
+		end
+
+		if closet.PrimaryPart then
+			-- DI CHUYỂN TỚI TỦ
+			local targetCF = CFrame.new(
+				closet.PrimaryPart.Position - closet.PrimaryPart.CFrame.LookVector * 2,
+				closet.PrimaryPart.Position
+			)
+
+			local dist = (root.Position - targetCF.Position).Magnitude
+			local t = math.max(dist / MOVE_SPEED, 0.1)
+
+			TweenService:Create(
+				root,
+				TweenInfo.new(t, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+				{ CFrame = targetCF }
+			):Play()
+
+			task.wait(t)
+			task.wait(1)
+
+			-- ÂM THANH PHÁ TỦ
+			local sound = Instance.new("Sound")
+			sound.SoundId = BREAK_SOUND_ID
+			sound.Volume = 1
+			sound.Parent = root
+			sound:Play()
+
+			-- TỦ SINK MƯỢT
+			for _, part in ipairs(closet:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Anchored = true
+					TweenService:Create(
+						part,
+						TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
+						{ Position = part.Position - Vector3.new(0, 8, 0) }
+					):Play()
+				end
+			end
+
+			task.wait(1.2)
+			closet:Destroy()
+		end
+	end
+
+	table.remove(wardrobes, 1)
+	task.wait(0.15)
+end
+
+-- ======================
+-- ENTITY SINK & DESTROY
+-- ======================
+TweenService:Create(
+	root,
+	TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
+	{ CFrame = root.CFrame * CFrame.new(0, -30, 0) }
+):Play()
+
+task.wait(2)
+entity:Destroy()
+
+-- One-time execute guard
+if getgenv()._XTERMANEL_ALREADY_EXECUTED then
+    warn("[SCRIPT] Script đã được chạy trước đó, từ chối execute!")
+    return
+end
+
+getgenv()._XTERMANEL_ALREADY_EXECUTED = true
+
+-- ======================
+-- SCRIPT CHÍNH BẮT ĐẦU Ở ĐÂY
+-- ======================
+
+print("[SCRIPT] Execute lần đầu thành công!")
+
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/Voor-Pr00/Achivements/refs/heads/main/Voorpr0"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Nowhere Hiding",
+    Desc = "Where am i suppose to hide?!",
+    Reason = "Encounter X-Termanel.",
+    Image = "rbxassetid://100110583935847"
+})
