@@ -1,0 +1,199 @@
+--------------------------------------------------
+-- LOAD SPAWNER
+--------------------------------------------------
+local spawner = loadstring(game:HttpGet(
+	"https://raw.githubusercontent.com/VoorPhale012/Fogroom/refs/heads/main/Wwwhyyyyil"
+))()
+
+--------------------------------------------------
+-- CREATE ENTITY
+--------------------------------------------------
+local entity = spawner.Create({
+	Entity = {
+		Name = "Blitz?",
+		Asset = "https://github.com/vuivuiviu2/Tension-Mode/raw/refs/heads/main/blitz.rbxm",
+		HeightOffset = 0
+	},
+
+	Earthquake = { Enabled = true },
+
+	CameraShake = {
+		Enabled = true,
+		Range = 100,
+		Values = {5.5, 66, 0.75, 5}
+	},
+
+	Movement = {
+		Speed = 250,
+		Delay = 5,
+		Reversed = false
+	},
+
+	Rebounding = {
+		Enabled = true,
+		Type = "Blitz",
+		Min = 1,
+		Max = 1,
+		Delay = 0
+	},
+
+	Damage = {
+		Enabled = true,
+		Range = 40,
+		Amount = 50
+	},
+
+	Crucifixion = {
+		Enabled = true,
+		Range = 40,
+		Resist = false,
+		Break = true
+	},
+
+	Death = {
+		Type = "Guiding",
+		Hints = {
+			"Hmm, Blitz?",
+			"is being a bully, huh?",
+			"Donâ€™t worry, I believe in you",
+			"When it screams and the ground shakes, just hide quickly, okay?",
+			"bye :3"
+		}
+	}
+})
+
+--------------------------------------------------
+-- ðŸŒŒ COLOR CORRECTION (PURPLE + TRUE RESET)
+--------------------------------------------------
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+
+local cc = Lighting:FindFirstChild("MainColorCorrection")
+if not cc then
+	cc = Instance.new("ColorCorrectionEffect")
+	cc.Name = "MainColorCorrection"
+	cc.Parent = Lighting
+end
+
+local activeTweens = {}
+local effectActive = false
+
+local function stopTweens()
+	for _, tw in ipairs(activeTweens) do
+		pcall(function()
+			tw:Cancel()
+		end)
+	end
+	table.clear(activeTweens)
+end
+
+local function applyEffect()
+	if effectActive then return end
+	effectActive = true
+
+	stopTweens()
+
+	cc.TintColor = Color3.fromRGB(100, 0, 235)
+	cc.Contrast = 10
+
+	local t1 = TweenService:Create(
+		cc,
+		TweenInfo.new(2.5),
+		{ Contrast = 0 }
+	)
+
+	local t2 = TweenService:Create(
+		cc,
+		TweenInfo.new(5),
+		{ TintColor = Color3.fromRGB(170, 0, 233) } -- ðŸ’œ tÃ­m Ä‘áº­m
+	)
+
+	table.insert(activeTweens, t1)
+	table.insert(activeTweens, t2)
+
+	t1:Play()
+	t2:Play()
+end
+
+local function resetEffect()
+	if not effectActive then return end
+	effectActive = false
+
+	stopTweens()
+
+	cc.Contrast = 0
+
+	local resetTween = TweenService:Create(
+		cc,
+		TweenInfo.new(2),
+		{ TintColor = Color3.fromRGB(255, 255, 255) } -- ðŸ” bÃ¬nh thÆ°á»ng
+	)
+
+	table.insert(activeTweens, resetTween)
+	resetTween:Play()
+end
+
+--------------------------------------------------
+-- ENTITY CALLBACKS
+--------------------------------------------------
+entity:SetCallback("OnSpawned", function()
+	print("Entity has spawned")
+
+	applyEffect()
+
+	-- â±ï¸ auto reset sau 10 giÃ¢y
+	task.delay(10, function()
+		resetEffect()
+	end)
+end)
+
+entity:SetCallback("OnStartMoving", function()
+	print("Entity has started moving")
+end)
+
+entity:SetCallback("OnEnterRoom", function(room, firstTime)
+	if firstTime then
+		print("Entity entered room:", room.Name)
+	end
+end)
+
+entity:SetCallback("OnLookAt", function(look)
+	if look then
+		print("Player is looking at entity")
+	end
+end)
+
+entity:SetCallback("OnDespawned", function()
+	print("Entity has despawned")
+	resetEffect()
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth == 0 then
+		print("Entity killed the player")
+	end
+end)
+
+--------------------------------------------------
+-- RUN ENTITY
+--------------------------------------------------
+entity:Run()
+
+--------------------------------------------------
+-- ðŸ”Š SOUNDS
+--------------------------------------------------
+local sound1 = Instance.new("Sound")
+sound1.SoundId = "rbxassetid://2357464981"
+sound1.Volume = 0.5
+sound1.PlaybackSpeed = 0.5
+sound1.Parent = workspace
+sound1:Play()
+
+task.delay(10.5, function()
+	local sound2 = Instance.new("Sound")
+	sound2.SoundId = "rbxassetid://577577319"
+	sound2.Volume = 1
+	sound2.PlaybackSpeed = 0.88
+	sound2.Parent = workspace
+	sound2:Play()
+end)
