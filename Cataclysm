@@ -399,6 +399,16 @@ firesignal(
 
 game.ReplicatedStorage.GameStats["Player_" .. player.Name]
     .Total.DeathCause.Value = "Cataclysm"
+wait(1.5)
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/Voor-Pr00/Achivements/refs/heads/main/Voorpr0"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "Monitoring",
+    Desc = "I'm slow, you're weak.",
+    Reason = "Died to Cataclysm.",
+    Image = "rbxassetid://108102111650983"
+})
 
 		sound:Stop()
 		part:Destroy()
