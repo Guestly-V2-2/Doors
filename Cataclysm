@@ -1,0 +1,406 @@
+-------------------------------------------------
+-- SERVICES
+-------------------------------------------------
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+-------------------------------------------------
+-- PLAYER
+-------------------------------------------------
+local LocalPlayer = Players.LocalPlayer
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-------------------------------------------------
+-- CONFIG
+-------------------------------------------------
+local PART_SPEED = 6.7          -- tốc độ di chuyển
+local MAX_POINTS = 30          -- số point path tối đa
+local RECORD_DISTANCE = 2      -- khoảng cách ghi path
+local SPAWN_DISTANCE = 60      -- spawn phía sau player
+
+-------------------------------------------------
+-- STATE
+-------------------------------------------------
+local pathPoints = {}
+local isPlayerHiding = false
+local triggered = false
+local isEclipserActive = false
+local isHidersActive = false
+local isPaused = false
+
+-------------------------------------------------
+-- PART (SPAWN SAU LƯNG PLAYER)
+-------------------------------------------------
+local offsetX = math.random(-10,10)
+local offsetY = math.random(-3,3)
+
+local part = Instance.new("Part")
+part.Size = Vector3.new(5,5,5)
+part.Anchored = true
+part.Transparency = 1
+part.CanCollide = false
+part.CastShadow = false
+part.CFrame = hrp.CFrame * CFrame.new(offsetX, offsetY, SPAWN_DISTANCE)
+part.Parent = workspace
+
+-------------------------------------------------
+-- LIGHT
+-------------------------------------------------
+local light = Instance.new("PointLight", part)
+light.Range = 8
+light.Brightness = 3
+light.Color = Color3.fromRGB(255,0,0)
+
+-------------------------------------------------
+-- SOUND
+-------------------------------------------------
+local sound = Instance.new("Sound", part)
+sound.SoundId = "rbxassetid://4860560167" -- bạn tự gắn
+sound.Looped = true
+sound.Volume = 1
+sound.PlaybackSpeed = 0.85
+sound.RollOffMaxDistance = 120
+sound.RollOffMinDistance = 10
+sound:Play()
+
+-------------------------------------------------
+-- BILLBOARD
+-------------------------------------------------
+local billboard = Instance.new("BillboardGui")
+billboard.Size = UDim2.new(15,0,15,0)
+billboard.AlwaysOnTop = true
+billboard.StudsOffset = Vector3.new(0,0.3,0)
+billboard.Adornee = part
+billboard.Parent = part
+
+local imageLabel = Instance.new("ImageLabel")
+imageLabel.Size = UDim2.new(1,0,1,0)
+imageLabel.BackgroundTransparency = 1
+imageLabel.Parent = billboard
+
+-------------------------------------------------
+-- IMAGES
+-------------------------------------------------
+local IMAGE_ID_1 = "rbxassetid://126389464981585"
+local IMAGE_ID_2 = "rbxassetid://85803206224507"
+local IMAGE_IDLE = "rbxassetid://111055247699130" -- mặt khi đứng im
+imageLabel.Image = IMAGE_ID_1
+
+-------------------------------------------------
+-- BILLBOARD IMAGE CONTROLLER
+-------------------------------------------------
+task.spawn(function()
+	local toggle = false
+
+	while part.Parent do
+		if isPaused then
+			-- đứng im → 1 mặt duy nhất
+			imageLabel.Image = IMAGE_IDLE
+			task.wait(0.1)
+		else
+			-- di chuyển → đổi mặt liên tục
+			toggle = not toggle
+			imageLabel.Image = toggle and IMAGE_ID_1 or IMAGE_ID_2
+			task.wait(1)
+		end
+	end
+end)
+
+-------------------------------------------------
+-- ECLIPSER DETECTOR
+-------------------------------------------------
+task.spawn(function()
+	while true do
+		local found = false
+
+		for _, obj in ipairs(workspace:GetChildren()) do
+			if obj.Name == "Eclipser" then
+				found = true
+				break
+			end
+		end
+
+		isEclipserActive = found
+		task.wait(0.2)
+	end
+end)
+
+-------------------------------------------------
+-- HIDERS DETECTOR (CURRENT ROOM)
+-------------------------------------------------
+task.spawn(function()
+	while true do
+		local found = false
+
+		local currentRoom = workspace:FindFirstChild("CurrentRooms")
+			and workspace.CurrentRooms:FindFirstChild(tostring(LocalPlayer:GetAttribute("CurrentRoom")))
+
+		if currentRoom then
+			for _, obj in ipairs(currentRoom:GetChildren()) do
+				if obj.Name == "Hiders" then
+					found = true
+					break
+				end
+			end
+		end
+
+		isHidersActive = found
+		task.wait(0.2)
+	end
+end)
+
+-------------------------------------------------
+-- BILLBOARD SHAKE (FIX)
+-------------------------------------------------
+task.spawn(function()
+	local t = 0
+	while imageLabel.Parent do
+		t += 0.15
+		imageLabel.Position = UDim2.new(
+			0, math.sin(t) * 3,
+			0, math.cos(t * 1.3) * 3
+		)
+		imageLabel.Rotation = math.sin(t * 0.8) * 2
+		task.wait(0.03)
+	end
+end)
+
+-------------------------------------------------
+-- HIDE DETECTOR (USING HIDING ATTRIBUTE)
+-------------------------------------------------
+task.spawn(function()
+	while character.Parent do
+		-- ưu tiên lấy từ character
+		local hiding = character:GetAttribute("Hiding")
+
+		-- fallback: có vài bản gắn attribute ở HRP
+		if hiding == nil then
+			hiding = hrp:GetAttribute("Hiding")
+		end
+
+		isPlayerHiding = (hiding == true)
+		task.wait(0.1)
+	end
+end)
+
+-------------------------------------------------
+-- RECORD PLAYER PATH
+-------------------------------------------------
+task.spawn(function()
+	while character.Parent do
+		if not isPlayerHiding then
+			if #pathPoints == 0 or (hrp.Position - pathPoints[#pathPoints]).Magnitude >= RECORD_DISTANCE then
+				table.insert(pathPoints, hrp.Position)
+				if #pathPoints > MAX_POINTS then
+					table.remove(pathPoints, 1)
+				end
+			end
+		end
+		task.wait(0.15)
+	end
+end)
+
+-------------------------------------------------
+-- FOLLOW PATH (TWEEN)
+-------------------------------------------------
+task.spawn(function()
+	while part.Parent do
+		isPaused = isPlayerHiding or isEclipserActive or isHidersActive
+
+if isPaused then
+	task.wait(0.1)
+		elseif #pathPoints > 0 then
+			local targetPos = table.remove(pathPoints, 1)
+
+			local tween = TweenService:Create(
+				part,
+				TweenInfo.new(
+					(targetPos - part.Position).Magnitude / PART_SPEED,
+					Enum.EasingStyle.Linear
+				),
+				{CFrame = CFrame.new(targetPos)}
+			)
+
+			tween:Play()
+			tween.Completed:Wait()
+		else
+			task.wait(0.05)
+		end
+	end
+end)
+
+-------------------------------------------------
+-- TOUCH HOOK + DESTROY
+-------------------------------------------------
+part.Touched:Connect(function(hit)
+	if triggered then return end
+	local hum = hit.Parent and hit.Parent:FindFirstChildOfClass("Humanoid")
+	if hum and hit.Parent == character then
+		triggered = true
+
+		local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+--// SERVICES
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+--// REMOVE OLD GUI
+pcall(function()
+	if CoreGui:FindFirstChild("JumpscareGui") then
+		CoreGui.JumpscareGui:Destroy()
+	end
+end)
+
+--// LOAD SOUND
+local function loadSound(data)
+	local sound = Instance.new("Sound")
+	local id = tostring(data[1])
+	local props = data[2] or {}
+
+	for k, v in pairs(props) do
+		if k ~= "SoundId" and k ~= "Parent" then
+			sound[k] = v
+		end
+	end
+
+	if id:find("rbxasset://") then
+		sound.SoundId = id
+	else
+		sound.SoundId = "rbxassetid://" .. id:gsub("%D", "")
+	end
+
+	sound.Parent = workspace
+	return sound
+end
+
+--// CONFIG (BẠN CÓ THỂ CHỈNH)
+local config = {
+	Image1 = "rbxassetid://126389464981585",
+	Image2 = "rbxassetid://85803206224507",
+
+	Shake = true,
+
+	Sound1 = {1592934514, {Volume = 4}},
+	Sound2 = {1592934514, {Volume = 5}},
+
+	Flashing = {
+		true,
+		Color3.fromRGB(0, 255, 0)
+	},
+
+	Tease = {
+		true,
+		Min = 1,
+		Max = 3
+	}
+}
+
+--// CREATE GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "JumpscareGui"
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = CoreGui
+
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.new(0, 0, 0)
+bg.BorderSizePixel = 0
+bg.ZIndex = 999
+bg.Parent = gui
+
+local face = Instance.new("ImageLabel")
+face.AnchorPoint = Vector2.new(0.5, 0.5)
+face.Position = UDim2.new(0.5, 0, 0.5, 0)
+face.Size = UDim2.new(0, 150, 0, 150)
+face.BackgroundTransparency = 1
+face.Image = config.Image1
+face.ResampleMode = Enum.ResamplerMode.Pixelated
+face.Parent = bg
+
+--// SIZES
+local screenY = gui.AbsoluteSize.Y
+local minSize = screenY / 5
+local maxSize = screenY / 2.5
+
+--// TEASE
+local sound1, sound2
+if config.Sound1 then sound1 = loadSound(config.Sound1) end
+if config.Sound2 then sound2 = loadSound(config.Sound2) end
+
+if config.Tease and config.Tease[1] then
+	local loops = math.random(config.Tease.Min, config.Tease.Max)
+	if sound1 then sound1:Play() end
+
+	for _ = 1, loops do
+		task.wait(math.random(10, 20) / 100)
+		local grow = (maxSize - minSize) / loops
+		face.Size = face.Size + UDim2.new(0, grow, 0, grow)
+	end
+end
+
+--// FLASHING
+if config.Flashing and config.Flashing[1] then
+	task.spawn(function()
+		while gui.Parent do
+			bg.BackgroundColor3 = config.Flashing[2]
+			task.wait(math.random(25, 100) / 1000)
+			bg.BackgroundColor3 = Color3.new(0, 0, 0)
+			task.wait(math.random(25, 100) / 1000)
+		end
+	end)
+end
+
+--// SHAKE
+if config.Shake then
+	task.spawn(function()
+		local basePos = face.Position
+		while gui.Parent do
+			face.Position = basePos + UDim2.new(0, math.random(-10, 10), 0, math.random(-10, 10))
+			face.Rotation = math.random(-5, 5)
+			task.wait()
+		end
+	end)
+end
+
+--// FINAL JUMPSCARE
+face.Image = config.Image2
+face.Size = UDim2.new(0, maxSize, 0, maxSize)
+
+if sound2 then sound2:Play() end
+
+TweenService:Create(face, TweenInfo.new(0.75), {
+	Size = UDim2.new(0, screenY * 3, 0, screenY * 3),
+	ImageTransparency = 0.5
+}):Play()
+
+task.wait(0.75)
+
+--// CLEANUP
+gui:Destroy()
+if sound1 then sound1:Destroy() end
+if sound2 then sound2:Destroy() end
+
+humanoid:TakeDamage(100)
+
+-- ================= DEATH HINT =================
+firesignal(
+    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+    {
+        "You died to who called Cataclysm..",
+        "He will never stop chasing you even though he is slow.",
+        "You did it good. Good luck."
+    },
+    "Blue"
+)
+
+game.ReplicatedStorage.GameStats["Player_" .. player.Name]
+    .Total.DeathCause.Value = "Cataclysm"
+
+		sound:Stop()
+		part:Destroy()
+	end
+end)
