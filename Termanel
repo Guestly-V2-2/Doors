@@ -67,6 +67,7 @@ local centerPos = (minV + maxV) / 2
 local entity = game:GetObjects(ENTITY_MODEL_ID)[1]
 entity.Parent = Workspace
 entity:PivotTo(CFrame.new(centerPos - Vector3.new(0, 15, 0)))
+workspace["A-200"]["A-200"].Attachment.Face.Texture = "rbxassetid://121463629003068"
 
 if not entity.PrimaryPart then
 	entity.PrimaryPart = entity:FindFirstChildWhichIsA("BasePart", true)
@@ -197,5 +198,5 @@ achievementGiver({
     Title = "Nowhere Hiding",
     Desc = "Where am i suppose to hide?!",
     Reason = "Encounter Termanel.",
-    Image = "rbxassetid://98404367188404"
+    Image = "rbxassetid://81370035011311"
 })
