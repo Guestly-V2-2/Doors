@@ -67,11 +67,7 @@ local centerPos = (minV + maxV) / 2
 local entity = game:GetObjects(ENTITY_MODEL_ID)[1]
 entity.Parent = Workspace
 entity:PivotTo(CFrame.new(centerPos - Vector3.new(0, 15, 0)))
-workspace["A-200"]["A-200"].Attachment.Face.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(122, 129, 255)),   -- Đỏ
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(122, 129, 255)), -- Xanh lá
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(122, 129, 255))    -- Xanh dương
-})
+workspace["A-200"]["A-200"].Attachment.Face.Texture = "rbxassetid://129294917020683"
 
 if not entity.PrimaryPart then
 	entity.PrimaryPart = entity:FindFirstChildWhichIsA("BasePart", true)
@@ -182,12 +178,12 @@ task.wait(2)
 entity:Destroy()
 
 -- One-time execute guard
-if getgenv()._XTERMANEL_ALREADY_EXECUTED then
+if getgenv()._TERMANEL_ALREADY_EXECUTED then
     warn("[SCRIPT] Script đã được chạy trước đó, từ chối execute!")
     return
 end
 
-getgenv()._XTERMANEL_ALREADY_EXECUTED = true
+getgenv()._TERMANEL_ALREADY_EXECUTED = true
 
 -- ======================
 -- SCRIPT CHÍNH BẮT ĐẦU Ở ĐÂY
@@ -202,5 +198,5 @@ achievementGiver({
     Title = "Nowhere Hiding",
     Desc = "Where am i suppose to hide?!",
     Reason = "Encounter X-Termanel.",
-    Image = "rbxassetid://100110583935847"
+    Image = "rbxassetid://72033985836337"
 })
