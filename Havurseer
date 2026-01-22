@@ -54,16 +54,16 @@ local v4 = {
         },
     },
     Movement = {
-        Speed = 300,
+        Speed = 250,
         Delay = 5,
         Reversed = false,
     },
     Rebounding = {
         Enabled = true,
         Type = 'Ambush',
-        Min = 12,
-        Max = 12,
-        Delay = 0,
+        Min = 1,
+        Max = 2,
+        Delay = 2,
     },
     Damage = {
         Enabled = true,
