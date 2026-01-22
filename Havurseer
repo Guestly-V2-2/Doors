@@ -1,0 +1,347 @@
+-- ts file was generated at discord.gg/25ms
+
+local _PlayerGui = game.Players.LocalPlayer:WaitForChild('PlayerGui')
+local _ScreenGui = Instance.new('ScreenGui')
+
+_ScreenGui.Name = 'RandomImageGui'
+_ScreenGui.Parent = _PlayerGui
+_ScreenGui.IgnoreGuiInset = true
+
+local _ImageLabel = Instance.new('ImageLabel')
+
+_ImageLabel.Size = UDim2.new(1, 0, 1, 0)
+_ImageLabel.BackgroundTransparency = 1
+_ImageLabel.Image = 'rbxassetid://76637426417491'
+_ImageLabel.ImageTransparency = 1
+_ImageLabel.Parent = _ScreenGui
+_ImageLabel.ImageColor3 = Color3.fromRGB(255, 0, 0)
+
+task.spawn(function()
+    while true do
+        _ImageLabel.Image = 'rbxassetid://94547864377343'
+
+        wait(0)
+
+        _ImageLabel.Image = 'rbxassetid://76637426417491'
+
+        wait(0)
+    end
+end)
+
+local v4 = {
+    Entity = {
+        Name = 'Havurseer',
+        Asset = 'https://github.com/Guestly-V2-2/Random-Stuffs/raw/refs/heads/main/coinjion.rbxm',
+        HeightOffset = 1,
+    },
+    Lights = {
+        Flicker = {
+            Enabled = false,
+            Duration = 7,
+        },
+        Shatter = true,
+        Repair = false,
+    },
+    Earthquake = {Enabled = false},
+    CameraShake = {
+        Enabled = true,
+        Range = 300,
+        Values = {
+            10,
+            8,
+            5,
+            5,
+        },
+    },
+    Movement = {
+        Speed = 300,
+        Delay = 5,
+        Reversed = false,
+    },
+    Rebounding = {
+        Enabled = true,
+        Type = 'Ambush',
+        Min = 12,
+        Max = 12,
+        Delay = 0,
+    },
+    Damage = {
+        Enabled = true,
+        Range = 60,
+        Amount = 0.01,
+    },
+    Crucifixion = {
+        Enabled = false,
+        Range = 100,
+        Resist = false,
+        Break = true,
+    },
+    Death = {
+        Type = 'Guiding',
+        Hints = {
+            'You dead to Ripper',
+            'Just hide when he appears',
+        },
+        Cause = '',
+    },
+}
+local v5 = loadstring(game:HttpGet('https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua'))().Create(v4)
+local _TweenService = game:GetService('TweenService')
+local v7 = TweenInfo.new(5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+local v8 = {
+    Color = Color3.new(1, 0, 0),
+}
+local v9, v10, v11 = pairs(workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value]:GetDescendants())
+local u12 = _ImageLabel
+local u13 = true
+
+while true do
+    local v14, v15 = v9(v10, v11)
+
+    if v14 == nil then
+        break
+    end
+
+    v11 = v14
+
+    if v15:IsA('Light') then
+        _TweenService:Create(v15, v7, v8):Play()
+    end
+    if v15.Parent.Name == 'LightFixture' then
+        _TweenService:Create(v15.Parent, v7, v8):Play()
+    end
+end
+
+local u16 = require(game.ReplicatedStorage.CameraShaker)
+local _CurrentCamera = game.Workspace.CurrentCamera
+local u19 = u16.new(Enum.RenderPriority.Camera.Value, function(p18)
+    _CurrentCamera.CFrame = _CurrentCamera.CFrame * p18
+end)
+local v20 = u19
+
+u19.Start(v20)
+
+local v21 = u19
+
+u19.ShakeOnce(v21, 5, 5, 0, 5.5, 1, 0)
+
+local v22 = u19
+
+u19.Shake(v22, u16.Presets.Earthquake)
+
+local _Debris = game:GetService('Debris')
+local _TweenService2 = game:GetService('TweenService')
+local _ColorCorrectionEffect = Instance.new('ColorCorrectionEffect', game.Lighting)
+
+task.spawn(function()
+    _TweenService2:Create(_ColorCorrectionEffect, TweenInfo.new(5), {
+        TintColor = Color3.fromRGB(158, 2, 2),
+        Saturation = -0.7,
+        Contrast = 1,
+    }):Play()
+end)
+
+local _Sound = Instance.new('Sound')
+
+_Sound.SoundId = 'rbxassetid://7492329874'
+_Sound.PlaybackSpeed = 1
+_Sound.Looped = false
+_Sound.Parent = workspace
+_Sound.Volume = 10
+
+_Sound:Play()
+
+local _Sound2 = Instance.new('Sound')
+
+_Sound2.SoundId = 'rbxassetid://134263165995764'
+_Sound2.PlaybackSpeed = 0.9
+_Sound2.Looped = false
+_Sound2.Parent = workspace
+_Sound2.Volume = 10
+
+_Sound2:Play()
+
+local v27 = _Debris
+
+_Debris.AddItem(v27, _Sound, 10)
+v5:SetCallback('OnDespawning', function()
+    u19:Start()
+    u19:ShakeOnce(10, 15, 0, 5.5, 1, 0)
+    u19:Shake(u16.Presets.Earthquake)
+    workspace.CurrentRooms[game.ReplicatedStorage.GameData.LatestRoom.Value]:WaitForChild('Door').ClientOpen:FireServer()
+
+    local v28, v29, v30 = pairs(game.Workspace:WaitForChild('Havurseer'):GetDescendants())
+
+    while true do
+        local v31
+
+        v30, v31 = v28(v29, v30)
+
+        if v30 == nil then
+            break
+        end
+        if v31:IsA('Sound') then
+            v31:Destroy()
+        end
+    end
+
+    task.spawn(function()
+        _TweenService2:Create(_ColorCorrectionEffect, TweenInfo.new(10), {
+            TintColor = Color3.fromRGB(255, 255, 255),
+            Saturation = 0,
+            Contrast = 0,
+        }):Play()
+        _Debris:AddItem(_ColorCorrectionEffect, 10)
+    end)
+
+    if u13 == true then
+        function GitAud(p32, p33)
+            SoundName = tostring(SoundName)
+
+            writefile(p33 .. '.mp3', game:HttpGet(p32))
+
+            return (getcustomasset or getsynasset)(p33 .. '.mp3')
+        end
+        function CustomGitSound(p34, _, p35)
+            local _Sound2 = Instance.new('Sound')
+
+            _Sound2.SoundId = GitAud(p34, p35)
+            _Sound2.Parent = workspace
+            _Sound2.Volume = 10
+            _Sound2.Name = 'DoorBreaker'
+
+            _Sound2:Play()
+        end
+
+        CustomGitSound('https://github.com/Darker-TheDarkestGuy/DOORS/raw/refs/heads/main/lv_0_20250619133504.mp3?raw=true', 1, ' DoorBreaker')
+
+        local v37 = require(game.ReplicatedStorage.CameraShaker)
+        local _CurrentCamera2 = game.Workspace.CurrentCamera
+        local v40 = v37.new(Enum.RenderPriority.Camera.Value, function(p39)
+            _CurrentCamera2.CFrame = _CurrentCamera2.CFrame * p39
+        end)
+
+        v40:Start()
+        v40:ShakeOnce(20, 5, 5, 3, 2, 1)
+        -- One-time execute guard
+if getgenv()._ECLIP_ALREADY_EXECUTED then
+    warn("[SCRIPT] Script đã được chạy trước đó, từ chối execute!")
+    return
+end
+
+getgenv()._ECLIP_ALREADY_EXECUTED = true
+
+-- ======================
+-- SCRIPT CHÍNH BẮT ĐẦU Ở ĐÂY
+-- ======================
+
+print("[SCRIPT] Execute lần đầu thành công!")
+
+local achievementGiver = loadstring(game:HttpGet("https://raw.githubusercontent.com/Voor-Pr00/Achivements/refs/heads/main/Voorpr0"))()
+
+---====== Display achievement ======---
+achievementGiver({
+    Title = "THE DENIAL",
+    Desc = "They will never accept you as a friend.",
+    Reason = "Encounter Havurseer.",
+    Image = "rbxassetid://73966465436149"
+})
+    end
+end)
+v5:SetCallback('OnDamagePlayer', function(p41)
+    if p41 == 0 then
+        print('Entity has killed the player')
+    else
+        u13 = false
+
+        local _httpsgithubcomBrololtoAnglersoundsblobmainlv_0_20241221185918201mp3rawtrue = (function(p42, p43)
+            if not isfile(p43 .. '.mp3') then
+                writefile(p43 .. '.mp3', game:HttpGet(p42))
+            end
+
+            local _Sound3 = Instance.new('Sound')
+
+            _Sound3.SoundId = (getcustomasset or getsynasset)(p43 .. '.mp3')
+
+            return _Sound3
+        end)('https://github.com/Brololto/Angler-sounds/blob/main/lv_0_20241221185918%20(1).mp3?raw=true', 'Crashund')
+
+        _httpsgithubcomBrololtoAnglersoundsblobmainlv_0_20241221185918201mp3rawtrue.Volume = 5
+        _httpsgithubcomBrololtoAnglersoundsblobmainlv_0_20241221185918201mp3rawtrue.Parent = workspace
+        _httpsgithubcomBrololtoAnglersoundsblobmainlv_0_20241221185918201mp3rawtrue.PlaybackSpeed = 0.8
+
+        _httpsgithubcomBrololtoAnglersoundsblobmainlv_0_20241221185918201mp3rawtrue:Play()
+
+        local _LocalPlayer = game.Players.LocalPlayer
+
+        if not _LocalPlayer.Character then
+            _LocalPlayer.CharacterAdded:Wait()
+        end
+
+        local _CurrentCamera3 = workspace.CurrentCamera
+
+        game:GetService('RunService')
+
+        local _BasePart = game.Workspace:WaitForChild('Havurseer'):FindFirstChildWhichIsA('BasePart')
+
+        game.Players.LocalPlayer.Character:WaitForChild('Collision').Anchored = true
+        _BasePart.Anchored = false
+        _BasePart.CanCollide = true
+        _BasePart.CFrame = _BasePart.CFrame * CFrame.new(0, 1, 0)
+
+        local v49 = game:GetService('RunService').RenderStepped:Connect(function()
+            _CurrentCamera3.CFrame = CFrame.lookAt(_CurrentCamera3.CFrame.Position, _BasePart.Position)
+        end)
+
+        wait(1)
+        _TweenService2:Create(u12, TweenInfo.new(3), {ImageTransparency = 0}):Play()
+
+        local v50, v51, v52 = pairs(game.Workspace:WaitForChild('Havurseer'):GetDescendants())
+        local v53 = _BasePart
+
+        while true do
+            local v54
+
+            v52, v54 = v50(v51, v52)
+
+            if v52 == nil then
+                break
+            end
+            if v54:IsA('Sound') then
+                v54:Destroy()
+            end
+        end
+
+        wait(3)
+        _ScreenGui:Destroy()
+        v49:Disconnect()
+        v53:Destroy()
+        wait(0.2)
+
+        
+firesignal(
+    game.ReplicatedStorage.RemotesFolder.DeathHint.OnClientEvent,
+    {
+        "You died to who called Havurseer..",
+        "He is a psychopath..",
+        "You have to hide from him at all cost. Or else..."
+    },
+    "Blue"
+)
+
+game.Players.LocalPlayer.Character.Humanoid.Health = 0
+        game.ReplicatedStorage.GameStats['Player_' .. game.Players.LocalPlayer.Name].Total.DeathCause.Value = 'Havurseer'
+wait(10)
+game.Workspace.Havurseer:Destroy()
+    end
+end)
+v5:Run()
+
+wait(20)
+game.Lighting.MainColorCorrection.TintColor = Color3.fromRGB(255, 0, 0)
+game.Lighting.MainColorCorrection.Contrast = 0.01
+local tween = game:GetService("TweenService")
+tween:Create(game.Lighting.MainColorCorrection, TweenInfo.new(2.5), {Contrast = 0}):Play()
+local TweenService = game:GetService("TweenService")
+local TW = TweenService:Create(game.Lighting.MainColorCorrection, TweenInfo.new(3),{TintColor = Color3.fromRGB(255, 255, 255)})
+TW:Play()
