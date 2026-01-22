@@ -33,7 +33,7 @@ local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/Regul
 local entity = spawner.Create({
 	Entity = {
 		Name = "Depth",
-		Asset = "rbxassetid://12442784694",
+		Asset = "https://github.com/Johnny39871/storage/blob/main/depth.rbxm?raw=true",
 		HeightOffset = 0
 	},
 	Lights = {
@@ -86,14 +86,6 @@ local entity = spawner.Create({
 
 entity:SetCallback("OnSpawned", function()
     print("Entity has spawned")
-wait(0.2)
-local find = workspace.Depth.RushNew:GetChildren()[18]
-if find then
-workspace.Depth.RushNew:GetChildren()[18]:Destroy()
-end
-
-if not find then return end
-
 function GitAud(soundgit,filename)
     SoundName=tostring(SoundName)
     local url=soundgit
