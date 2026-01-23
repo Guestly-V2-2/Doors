@@ -1,0 +1,184 @@
+--// DOORS ENTITY QTE - CLEAN ENDING + DEATH HOOK
+--// Client-side exploit template
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+--------------------------------------------------
+-- CONFIG
+--------------------------------------------------
+
+local REQUIRED_CLICKS = 30
+local TIME_LIMIT = 5
+local SHAKE_STRENGTH = 4
+local OVERLAY_SWITCH_TIME = 0.12
+local FACE_FADE_TIME = 3
+
+local ContentProvider = game:GetService("ContentProvider")
+
+-- IMAGE IDS (bạn tự gắn)
+local BLACK_IMAGE = "rbxassetid://139040073980655"
+local FACE_IMAGE  = "rbxassetid://90750184202852"
+
+local OVERLAY_IMAGES = {
+	"rbxassetid://76637426417491",
+	"rbxassetid://94547864377343"
+}
+
+--------------------------------------------------
+-- DEATH HOOK
+--------------------------------------------------
+
+local deathTriggered = false
+local function OnDeath()
+	if deathTriggered then return end
+	deathTriggered = true
+
+	print("no")
+end
+
+--------------------------------------------------
+-- GUI
+--------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Black
+local black = Instance.new("ImageLabel")
+black.Size = UDim2.fromScale(1,1)
+black.Position = UDim2.fromScale(0.5,0.5)
+black.AnchorPoint = Vector2.new(0.5,0.5)
+black.BackgroundTransparency = 1
+black.Image = BLACK_IMAGE
+black.Parent = gui
+
+-- Face
+local face = Instance.new("ImageLabel")
+face.Size = UDim2.fromScale(0.6,0.6)
+face.Position = UDim2.fromScale(0.5,0.5)
+face.AnchorPoint = Vector2.new(0.5,0.5)
+face.BackgroundTransparency = 1
+face.Image = FACE_IMAGE
+face.Parent = gui
+
+-- Overlay
+local overlay = Instance.new("ImageLabel")
+overlay.Size = UDim2.fromScale(1,1)
+overlay.Position = UDim2.fromScale(0.5,0.5)
+overlay.AnchorPoint = Vector2.new(0.5,0.5)
+overlay.BackgroundTransparency = 1
+overlay.ImageTransparency = 0.3
+overlay.Parent = gui
+
+--------------------------------------------------
+-- OVERLAY CYCLER
+--------------------------------------------------
+
+local overlayRunning = true
+task.spawn(function()
+	local i = 1
+	while overlayRunning and overlay.Parent do
+		overlay.Image = OVERLAY_IMAGES[i]
+		i += 1
+		if i > #OVERLAY_IMAGES then i = 1 end
+		task.wait(OVERLAY_SWITCH_TIME)
+	end
+end)
+
+--------------------------------------------------
+-- QTE TEXT
+--------------------------------------------------
+
+local counterText = Instance.new("TextLabel")
+counterText.Size = UDim2.fromScale(1,0.1)
+counterText.Position = UDim2.fromScale(0.5,0.05)
+counterText.AnchorPoint = Vector2.new(0.5,0)
+counterText.BackgroundTransparency = 1
+counterText.TextColor3 = Color3.new(1,1,1)
+counterText.Font = Enum.Font.GothamBold
+counterText.TextScaled = true
+counterText.Text = "0/"..REQUIRED_CLICKS
+counterText.Parent = gui
+
+local timerText = Instance.new("TextLabel")
+timerText.Size = UDim2.fromScale(1,0.1)
+timerText.Position = UDim2.fromScale(0.5,0.85)
+timerText.AnchorPoint = Vector2.new(0.5,0)
+timerText.BackgroundTransparency = 1
+timerText.TextColor3 = Color3.new(1,1,1)
+timerText.Font = Enum.Font.Gotham
+timerText.TextScaled = true
+timerText.Text = TIME_LIMIT.." seconds left"
+timerText.Parent = gui
+
+--------------------------------------------------
+-- SHAKE
+--------------------------------------------------
+
+local basePos = UDim2.fromScale(0.5,0.5)
+local shakeConn = RunService.RenderStepped:Connect(function()
+	local ox = math.random(-SHAKE_STRENGTH,SHAKE_STRENGTH)/1000
+	local oy = math.random(-SHAKE_STRENGTH,SHAKE_STRENGTH)/1000
+	face.Position = basePos + UDim2.fromScale(ox,oy)
+end)
+
+--------------------------------------------------
+-- QTE LOGIC
+--------------------------------------------------
+
+local clicks = 0
+local finished = false
+local timeLeft = TIME_LIMIT
+
+mouse.Button1Down:Connect(function()
+	if finished then return end
+	clicks += 1
+	counterText.Text = clicks.."/"..REQUIRED_CLICKS
+end)
+
+task.spawn(function()
+	while timeLeft > 0 and not finished do
+		timerText.Text = timeLeft.." seconds left"
+		task.wait(1)
+		timeLeft -= 1
+	end
+
+	if finished then return end
+	finished = true
+
+	--------------------------------------------------
+	-- RESULT
+	--------------------------------------------------
+
+	-- Dừng mọi state chung
+	overlayRunning = false
+	if shakeConn then shakeConn:Disconnect() end
+	if counterText then counterText:Destroy() end
+	if timerText then timerText:Destroy() end
+	if black then black:Destroy() end
+	if overlay then overlay:Destroy() end
+
+	if clicks >= REQUIRED_CLICKS then
+		-- ✅ SUCCESS → CHỈ GIỮ FACE & FADE OUT
+		local tween = TweenService:Create(
+			face,
+			TweenInfo.new(FACE_FADE_TIME, Enum.EasingStyle.Linear),
+			{ImageTransparency = 1}
+		)
+		tween:Play()
+		tween.Completed:Wait()
+
+		face:Destroy()
+		gui:Destroy()
+	else
+		-- ❌ FAIL → CLEAR & DEATH HOOK NGAY
+		gui:Destroy()
+		OnDeath()
+	end
+end)
