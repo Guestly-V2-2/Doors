@@ -28,6 +28,8 @@ local triggered = false
 local isEclipserActive = false
 local isHidersActive = false
 local isPaused = false
+local isOverlayRunning = false
+local isHavurseer = false
 
 -------------------------------------------------
 -- PART (SPAWN SAU LƯNG PLAYER)
@@ -104,6 +106,44 @@ task.spawn(function()
 			imageLabel.Image = toggle and IMAGE_ID_1 or IMAGE_ID_2
 			task.wait(1)
 		end
+	end
+end)
+
+-------------------------------------------------
+-- OVERLAYRUNNING DETECTOR
+-------------------------------------------------
+task.spawn(function()
+	while true do
+		local found = false
+
+		for _, obj in ipairs(workspace:GetChildren()) do
+			if obj.Name == "OverlayRunning" then
+				found = true
+				break
+			end
+		end
+
+		isOverlayRunning = found
+		task.wait(0.2)
+	end
+end)
+
+-------------------------------------------------
+-- HAVURSEER DETECTOR
+-------------------------------------------------
+task.spawn(function()
+	while true do
+		local found = false
+
+		for _, obj in ipairs(workspace:GetChildren()) do
+			if obj.Name == "Havurseer" then
+				found = true
+				break
+			end
+		end
+
+		isHavurseer = found
+		task.wait(0.2)
 	end
 end)
 
@@ -206,7 +246,11 @@ end)
 -------------------------------------------------
 task.spawn(function()
 	while part.Parent do
-		isPaused = isPlayerHiding or isEclipserActive or isHidersActive
+		isPaused = isPlayerHiding
+	or isEclipserActive
+	or isHidersActive
+	or isOverlayRunning
+  or isHavurseer
 
 if isPaused then
 	task.wait(0.1)
